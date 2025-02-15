@@ -7,6 +7,7 @@
 <body>
   <h1>Screen Profiler</h1>
   <p>A simple set of scripts to save, load, list, and remove screen profiles using <code>kscreen-console</code>.</p>
+  <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
 
   <h2>Installation</h2>
   <ol>
