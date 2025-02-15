@@ -13,11 +13,14 @@
   <ol>
     <li>
       <p>Clone the repository:</p>
-      <pre><code>git clone https://github.com/yourusername/screenprofiler.git<br>cd screenprofiler</code></pre>
+      <pre><code>git clone https://github.com/kakiharu/screenprofiler.git
+cd screenprofiler</code></pre>
     </li>
     <li>
       <p>Make the scripts executable:</p>
-      <pre><code>chmod +x screenprofiler.sh<br>chmod +x save_profile.sh<br>chmod +x load_profile.sh</code></pre>
+      <pre><code>chmod +x screenprofiler.sh
+chmod +x save_profile.sh
+chmod +x load_profile.sh</code></pre>
     </li>
   </ol>
 
