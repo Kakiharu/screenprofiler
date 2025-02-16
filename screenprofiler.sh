@@ -1,4 +1,27 @@
 #!/bin/bash
+######################Functions######################
+# Function to update save_profile.sh and load_profile.sh
+update_konsave_scripts() {
+  konsave_enable="$1"
+  save_script="$script_dir/save_profile.sh"
+  load_script="$script_dir/load_profile.sh"
+  # Update save_profile.sh
+  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$save_script"
+  # Update load_profile.sh
+  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$load_script"
+}
+
+# Function to display the help message
+display_help() {
+  echo "####################################"
+  echo "Save/Load/Remove Profile"
+  echo "    Usage: $0 {save|load|remove} [filename]"
+  echo "List Profiles"
+  echo "    Usage: $0 list"
+  echo "Enable/Disable Konsave"
+  echo "    Usage: $0 konsave {enable|disable}"
+  echo "####################################"
+}
 
 # Store the directory where the script is located
 script_dir="$(dirname "$(realpath "$0")")"
@@ -76,29 +99,7 @@ case $command in
 esac
 
 
-######################Functions######################
-# Function to update save_profile.sh and load_profile.sh
-update_konsave_scripts() {
-  konsave_enable="$1"
-  save_script="$script_dir/save_profile.sh"
-  load_script="$script_dir/load_profile.sh"
-  # Update save_profile.sh
-  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$save_script"
-  # Update load_profile.sh
-  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$load_script"
-}
 
-# Function to display the help message
-display_help() {
-  echo "####################################"
-  echo "Save/Load/Remove Profile"
-  echo "    Usage: $0 {save|load|remove} [filename]"
-  echo "List Profiles"
-  echo "    Usage: $0 list"
-  echo "Enable/Disable Konsave"
-  echo "    Usage: $0 konsave {enable|disable}"
-  echo "####################################"
-}
 
 
 
