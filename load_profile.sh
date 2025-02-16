@@ -1,4 +1,25 @@
 #!/bin/bash
+######################Functions######################
+# Function to extract values from JSON
+extract_value() {
+  echo "$profile" | jq -r "$1"
+}
+
+# Function to map orientation values
+map_orientation() {
+  case $1 in
+    1) echo "normal" ;;
+    2) echo "left" ;;
+    3) echo "inverted" ;;
+    4) echo "right" ;;
+    *) echo "normal" ;; # Default to normal if the value is not recognized
+  esac
+}
+
+
+
+
+
 
 # Check if the profiles directory and filename are provided as arguments
 if [ $# -lt 2 ]; then
@@ -84,19 +105,4 @@ echo "Screen profile applied"
 
 
 
-######################Functions######################
-# Function to extract values from JSON
-extract_value() {
-  echo "$profile" | jq -r "$1"
-}
 
-# Function to map orientation values
-map_orientation() {
-  case $1 in
-    1) echo "normal" ;;
-    2) echo "left" ;;
-    3) echo "inverted" ;;
-    4) echo "right" ;;
-    *) echo "normal" ;; # Default to normal if the value is not recognized
-  esac
-}
