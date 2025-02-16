@@ -25,3 +25,19 @@ current_config=$(echo "$current_config" | jq --arg pm "$primary_monitor" '. + {p
 echo "$current_config" > "$profiles_dir/$filename"
 
 echo "Screen profile saved to $profiles_dir/$filename"
+
+
+############## Konsave Integration ####################
+# Saves widgets and panel/kde settings.
+# Set the variable to enable or disable konsave
+konsave_enable=true
+
+# Check if konsave command exists and konsave_enable is true
+if [ "$konsave_enable" = true ] && command -v konsave &> /dev/null; then
+  # Run konsave command
+  konsave -s "$filename" -f
+  echo "konsave -s $filename executed successfully"
+else
+  echo "konsave command not found or konsave_enable is false"
+fi
+
