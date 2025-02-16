@@ -20,25 +20,29 @@ fi
 # Read the JSON file
 profile=$(cat "$profile_path")
 
-# Function to extract values from JSON
-extract_value() {
-  echo "$profile" | jq -r "$1"
-}
 
-# Function to map orientation values
-map_orientation() {
-  case $1 in
-    1) echo "normal" ;;
-    2) echo "left" ;;
-    3) echo "inverted" ;;
-    4) echo "right" ;;
-    *) echo "normal" ;; # Default to normal if the value is not recognized
-  esac
-}
 
 echo "Applying screen profile from $profile_path"
-
 primary_monitor=$(extract_value '.primaryMonitor')
+
+
+
+############## Konsave Integration ####################
+# Saves widgets and panel/kde settings.
+
+# Set the variable to enable or disable konsave
+konsave_enable=true
+
+# Check if konsave command exists and konsave_enable is true
+if [ "$konsave_enable" = true ] && command -v konsave &> /dev/null; then
+  # Run konsave command
+  konsave -a "$filename"
+  nohup plasmashell --replace &
+  echo "konsave -a $filename executed successfully"
+else
+  echo "konsave command not found or konsave_enable is false"
+fi
+
 
 # Iterate through the outputs
 outputs=$(echo "$profile" | jq -c '.outputs[]')
@@ -75,3 +79,24 @@ if [ ! -z "$primary_output" ]; then
 fi
 
 echo "Screen profile applied"
+
+
+
+
+
+######################Functions######################
+# Function to extract values from JSON
+extract_value() {
+  echo "$profile" | jq -r "$1"
+}
+
+# Function to map orientation values
+map_orientation() {
+  case $1 in
+    1) echo "normal" ;;
+    2) echo "left" ;;
+    3) echo "inverted" ;;
+    4) echo "right" ;;
+    *) echo "normal" ;; # Default to normal if the value is not recognized
+  esac
+}
