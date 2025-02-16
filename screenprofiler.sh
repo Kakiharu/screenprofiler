@@ -4,15 +4,7 @@
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
 
-# Function to display the help message
-display_help() {
-  echo "####################################"
-  echo "Save/Load/Remove Profile"
-  echo "    Usage: $0 {save|load|remove} [filename]"
-  echo "List Profiles"
-  echo "    Usage: $0 list"
-  echo "####################################"
-}
+
 
 # Check if at least one argument is provided
 if [ $# -lt 1 ]; then
@@ -33,14 +25,14 @@ case $command in
       echo "Usage: $0 save filename"
       exit 1
     fi
-    ./save_profile.sh "$profiles_dir" "$filename"
+    "$script_dir/save_profile.sh" "$profiles_dir" "$filename"
     ;;
   load)
     if [ -z "$filename" ]; then
       echo "Usage: $0 load filename"
       exit 1
     fi
-    ./load_profile.sh "$profiles_dir" "$filename"
+    "$script_dir/load_profile.sh" "$profiles_dir" "$filename"
     ;;
   remove)
     if [ -z "$filename" ]; then
@@ -61,8 +53,57 @@ case $command in
     done
     echo
     ;;
+  konsave)
+    if [ -z "$filename" ]; then
+      echo "Usage: $0 konsave {enable|disable}"
+      exit 1
+    fi
+    if [ "$filename" = "enable" ]; then
+      update_konsave_scripts "true"
+      echo "Konsave has been enabled."
+    elif [ "$filename" = "disable" ]; then
+      update_konsave_scripts "false"
+      echo "Konsave has been disabled."
+    else
+      echo "Invalid konsave command. Use 'enable' or 'disable'."
+      exit 1
+    fi
+    ;;
   *)
-    echo "Invalid command. Use 'help', 'save', 'load', 'remove', or 'list'."
+    echo "Invalid command. Use 'help', 'save', 'load', 'remove', 'list', or 'konsave'."
     exit 1
     ;;
 esac
+
+
+######################Functions######################
+# Function to update save_profile.sh and load_profile.sh
+update_konsave_scripts() {
+  konsave_enable="$1"
+  save_script="$script_dir/save_profile.sh"
+  load_script="$script_dir/load_profile.sh"
+  # Update save_profile.sh
+  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$save_script"
+  # Update load_profile.sh
+  sed -i "s/konsave_enable=.*/konsave_enable=$konsave_enable/" "$load_script"
+}
+
+# Function to display the help message
+display_help() {
+  echo "####################################"
+  echo "Save/Load/Remove Profile"
+  echo "    Usage: $0 {save|load|remove} [filename]"
+  echo "List Profiles"
+  echo "    Usage: $0 list"
+  echo "Enable/Disable Konsave"
+  echo "    Usage: $0 konsave {enable|disable}"
+  echo "####################################"
+}
+
+
+
+
+
+
+
+
