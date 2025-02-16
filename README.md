@@ -8,6 +8,10 @@
   <h1>Screen Profiler</h1>
   <p>A simple set of scripts to save, load, list, and remove screen profiles using <code>kscreen-doctor</code>.</p>
   <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
+  <p>Features Konsave auto loading and saving, this allows the saving of various KDE setting, such as panel and widgets.
+    you must have it installed for this feature to work. All you have to do is get your display how you want it then edit your panels/widgets then save.
+    <br>For example going from multi monitor to single monitor and having its own panel.<br>
+    <code>python -m pip install konsave</code></p>
 
   <h2>Installation</h2>
   <ol>
@@ -62,12 +66,19 @@ chmod +x load_profile.sh</code></pre>
   <br>
   <br>
 
+  <h3>Konsave Integration</h3>
+  <p>The konsave integration can be enabled or disabled with this command. By default it is enabled</p>
+  <pre><code>./screenprofiler.sh konsave enable/disable</code></pre>
+  <br>
+  <br>
+
   <h2>Dependencies</h2>
   <p>The following dependencies are required for the scripts to work correctly:</p>
   <ul>
     <li>kscreen</li>
     <li>xrandr</li>
     <li>jq</li>
+    <li>konsave</li>
   </ul>
   <p>Ensure these are installed on your system.</p>
 
