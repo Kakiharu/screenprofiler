@@ -2,40 +2,37 @@
 ######################Functions######################
 # Function to extract values from JSON
 extract_value() {
-  echo "$profile" | jq -r "$1"
+    echo "$profile" | jq -r "$1"
 }
 
 # Function to map orientation values
 map_orientation() {
-  case $1 in
-    1) echo "normal" ;;
-    2) echo "left" ;;
-    3) echo "inverted" ;;
-    4) echo "right" ;;
-    *) echo "normal" ;; # Default to normal if the value is not recognized
-  esac
+    case $1 in
+        1) echo "normal" ;;
+        2) echo "left" ;;
+        3) echo "inverted" ;;
+        4) echo "right" ;;
+        *) echo "normal" ;; # Default to normal if the value is not recognized
+    esac
 }
 
+# Determine the script's directory
+script_dir="$(dirname "$(realpath "$0")")"
+profiles_dir="$script_dir/profiles"
 
-
-
-
-
-# Check if the profiles directory and filename are provided as arguments
-if [ $# -lt 2 ]; then
-  echo "Usage: $0 profiles_dir filename"
-  exit 1
+# Check if the filename is provided as an argument
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 filename"
+    exit 1
 fi
 
-profiles_dir="$1"
-filename="$2"
-
+filename="$1"
 profile_path="$profiles_dir/$filename"
 
 # Check if the file exists
 if [ ! -f "$profile_path" ]; then
-  echo "File not found: $profile_path"
-  exit 1
+    echo "File not found: $profile_path"
+    exit 1
 fi
 
 # Read the JSON file
@@ -53,15 +50,18 @@ primary_monitor=$(extract_value '.primaryMonitor')
 
 # Set the variable to enable or disable konsave
 konsave_enable=true
+konsave_integration=$(extract_value '.konsaveintegration')
 
 # Check if konsave command exists and konsave_enable is true
-if [ "$konsave_enable" = true ] && command -v konsave &> /dev/null; then
+
+#if [ "$konsave_enable" = true ] && command -v konsave &> /dev/null; then
+if [ "$konsave_integration" = 1 ] ; then
   # Run konsave command
   konsave -a "$filename"
   nohup plasmashell --replace &
   echo "konsave -a $filename executed successfully"
 else
-  echo "konsave command not found or konsave_enable is false"
+  echo "konsave command not found or konsaveintegration is disabled"
 fi
 
 
@@ -79,8 +79,10 @@ for output in $outputs; do
 
   echo "Processing output $name"
 
+
   # Enable/disable the output
   if [ "$enabled" == "true" ]; then
+  
     echo "Enabling output $name with mode $mode, scale $scale, rotation $rotation, position $pos_x,$pos_y"
     kscreen-doctor output."$name".enable output."$name".mode."$mode" output."$name".scale."$scale" output."$name".rotation."$rotation" output."$name".position."$pos_x","$pos_y"
     if [ "$name" == "$primary_monitor" ]; then
