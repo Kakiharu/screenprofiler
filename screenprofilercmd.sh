@@ -1,4 +1,6 @@
 #!/bin/bash
+#V0.0.7
+
 # Store the directory where the script is located
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
@@ -7,13 +9,13 @@ profiles_dir="$script_dir/profiles"
 display_help() {
     echo "####################################################################################################"
     echo "# Save/Load/Remove Profile"
-    echo "#     Usage: $0 {save|load|remove} [profilename] [konsave enabled (0 or 1)]"
+    echo "#     Usage: $0 {save|load|remove} [profilename] [kde enabled (0 or 1)]"
     echo "#       Example: $0 save example 1"
     echo "#       Example: $0 load example"
     echo "# List Profiles"
     echo "#     Usage: $0 list"
 	echo "#"
-    echo "# Konsave  - Saves kde widgets and settings."
+    echo "# kde enabled   - Saves kde widgets and settings."
     echo "####################################################################################################"
 }
 
@@ -25,7 +27,7 @@ fi
 
 command=$1
 filename=$2
-konsave_arg=$3
+kde_arg=$3
 
 case $command in
     help|-help|--help)
@@ -35,10 +37,10 @@ case $command in
     #Save
     save)
         if [ -z "$filename" ]; then
-            echo "Usage: $0 save filename [konsave_state (0 or 1)]"
+            echo "Usage: $0 save filename [kde_state (0 or 1)]"
             exit 1
         fi
-        "$script_dir/save_profile.sh" "$filename" "$konsave_arg"
+        "$script_dir/save_profile.sh" "$filename" "$kde_arg"
         ;;
 		
     #Load

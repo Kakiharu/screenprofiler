@@ -10,9 +10,8 @@
     There is also a python script that creates a system tray icon for easy gui interaction. You can save, load, list, and remove screen profiles.</p>
 
   <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
-  <p>Konsave integration is included and can be used to let you save and apply your Linux customizations like widgets and panels on certain screens; you must have it installed for this feature to work. If Konsave is enabled on the profile creation, it will auto-load on the profile every time. Make sure to save before loading a different profile so you don't lose any saves.
+  <p>KDE integration is included and can be used to let you save and apply your Linux customizations like widgets and panels on certain screens; you must have it installed for this feature to work. If KDE is enabled on the profile creation, it will auto-load on the profile every time. Make sure to save before loading a different profile so you don't lose any saves.
       <br>For example, going from multi-monitor to single monitor and having its own panel.<br>
-      <code>python -m pip install konsave</code></p>
 
   <h2>Easy Installation</h2>
   <ol>
@@ -45,8 +44,8 @@ chmod +x screenprofiler.py</code></pre>
 
   <h2>Usage</h2>
   <p>Save/Load/Remove Profile<br>
-      Usage: <code>screenprofilercmd {save|load|remove} [profilename] [konsave enabled (0 or 1)]</code><br>
-      Example: <code>screenprofilercmd save example 1</code> - This will save with Konsave<br>
+      Usage: <code>screenprofilercmd {save|load|remove} [profilename] [KDE enabled (0 or 1)]</code><br>
+      Example: <code>screenprofilercmd save example 1</code> - This will save KDE settings<br>
       Example: <code>screenprofilercmd load example</code><br>
   List Profiles<br>
       Usage: <code>screenprofilercmd list</code></p>
@@ -63,7 +62,6 @@ chmod +x screenprofiler.py</code></pre>
       <li>jq</li>
       <br>
       <p>Python Dependencies</p>
-      <li>konsave</li>
       <li>PyQt5</li>
   </ul>
   <p>Ensure these are installed on your system.</p>
