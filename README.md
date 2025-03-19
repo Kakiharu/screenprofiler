@@ -49,11 +49,10 @@ chmod +x screenprofiler.py</code></pre>
       Example: <code>screenprofilercmd save example 1</code> - This will save with Konsave<br>
       Example: <code>screenprofilercmd load example</code><br>
   List Profiles<br>
-      Usage: <code>screenprofilercmd list</code></p><br>
-
-  <h3>Help</h3>
-  <p>The help command (or <code>-help</code> or <code>--help</code>) displays usage instructions.</p>
-  <pre><code>screenprofilercmd help</code></pre>
+      Usage: <code>screenprofilercmd list</code></p>
+  <p>Help<br>
+  The help command (or <code>-help</code> or <code>--help</code>) displays usage instructions.<br>
+  Usage: <code>screenprofilercmd help</code></p>
   <br><br>
 
   <h2>Dependencies</h2>
