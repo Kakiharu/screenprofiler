@@ -1,84 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-  <h1>Screen Profiler</h1>
-  <p>A simple set of scripts to save, load, list, and remove screen profiles using <code>kscreen-doctor</code>.</p>
-  <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
-  <p>Features Konsave auto loading and saving, this allows the saving of various KDE setting, such as panel and widgets.
-    you must have it installed for this feature to work. All you have to do is get your display how you want it then edit your panels/widgets then save.
-    <br>For example going from multi monitor to single monitor and having its own panel.<br>
-    <code>python -m pip install konsave</code></p>
+    <h1>Screen Profiler</h1>
+    <p>A program for helping switch between monitor layouts and resolutions in KDE. You can use the base scripts to simply set your resolution.
+    There is also a python script that creates a system tray icon for easy gui interaction. You can save, load, list, and remove screen profiles.</p>
 
-  <h2>Installation</h2>
+  <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
+  <p>Konsave integration is included and can be used to let you save and apply your Linux customizations like widgets and panels on certain screens; you must have it installed for this feature to work. If Konsave is enabled on the profile creation, it will auto-load on the profile every time. Make sure to save before loading a different profile so you don't lose any saves.
+      <br>For example, going from multi-monitor to single monitor and having its own panel.<br>
+      <code>python -m pip install konsave</code></p>
+
+  <h2>Easy Installation</h2>
   <ol>
-    <li>
-      <p>Clone the repository:</p>
-      <pre><code>git clone https://github.com/kakiharu/screenprofiler.git
-cd screenprofiler</code></pre>
-    </li>
-    <li>
-      <p>Make the scripts executable:</p>
-      <pre><code>chmod +x screenprofiler.sh
-chmod +x save_profile.sh
-chmod +x load_profile.sh</code></pre>
-    </li>
+      <li>
+          <p>Download the install.sh</p>
+      </li>
+      <li>
+          <p>Just place the installer where you want to install it and run. It will automatically add itself to <code>~/.local/bin</code> as <code>screenprofilercmd</code> so you can easily run commands.</p>
+      </li>
+      <li>
+          <p>Don't forget to give it execution rights.</p>
+      </li>
   </ol>
 
+  <h2>Manual Installation</h2>
+  <ol>
+      <li>
+          <p>Clone the repository:</p>
+          <pre><code>git clone https://github.com/kakiharu/screenprofiler.git
+cd screenprofiler</code></pre>
+        </li>
+        <li>
+            <p>Make the scripts executable:</p>
+            <pre><code>chmod +x screenprofilercmd.sh
+chmod +x save_profile.sh
+chmod +x load_profile.sh
+chmod +x screenprofiler.py</code></pre>
+        </li>
+    </ol>
+
   <h2>Usage</h2>
-
-  <h3>Saving a Profile</h3>
-  <p>The save command captures the current screen configuration and saves it to a profile.</p>
-  <pre><code>./screenprofiler.sh save [filename]</code></pre>
-  <blockquote>
-  <p>Example:</p>
-  <p>This command will save the current screen configuration to a profile named <code>default</code> in the <code>profiles</code> directory.</p>
-  <pre><code>./screenprofiler.sh save default</code></pre>
-  </blockquote>
-  <br>
-
-  <h3>Loading a Profile</h3>
-  <p>The load command applies a previously saved screen configuration.</p>
-  <pre><code>./screenprofiler.sh load [filename]</code></pre>
-  <blockquote>
-  <p>Example:</p>
-  <p>This command will load and apply the screen configuration from the profile named <code>default</code>.</p>
-  <pre><code>./screenprofiler.sh load default</code></pre>
-  </blockquote>
-  <br>
-
-  <h3>Listing Profiles</h3>
-  <p>The list command displays all available profiles.</p>
-  <pre><code>./screenprofiler.sh list</code></pre>
-  <br>
-
-  <h3>Remove a Profile</h3>
-  <p>The remove command deletes a specified profile.</p>
-  <pre><code>./screenprofiler.sh remove [filename]</code></pre>
-  <br>
+  <p>Save/Load/Remove Profile<br>
+      Usage: <code>screenprofilercmd {save|load|remove} [profilename] [konsave enabled (0 or 1)]</code><br>
+      Example: <code>screenprofilercmd save example 1</code> - This will save with Konsave<br>
+      Example: <code>screenprofilercmd load example</code><br>
+  List Profiles<br>
+      Usage: <code>screenprofilercmd list</code></p><br>
 
   <h3>Help</h3>
   <p>The help command (or <code>-help</code> or <code>--help</code>) displays usage instructions.</p>
-  <pre><code>./screenprofiler.sh help</code></pre>
-  <br>
-  <br>
-
-  <h3>Konsave Integration</h3>
-  <p>The konsave integration can be enabled or disabled with this command. By default it is enabled</p>
-  <pre><code>./screenprofiler.sh konsave enable/disable</code></pre>
-  <br>
-  <br>
+  <pre><code>screenprofilercmd help</code></pre>
+  <br><br>
 
   <h2>Dependencies</h2>
   <p>The following dependencies are required for the scripts to work correctly:</p>
   <ul>
-    <li>kscreen</li>
-    <li>xrandr</li>
-    <li>jq</li>
-    <li>konsave</li>
+      <li>kscreen</li>
+      <li>xrandr</li>
+      <li>jq</li>
+      <br>
+      <p>Python Dependencies</p>
+      <li>konsave</li>
+      <li>PyQt5</li>
   </ul>
   <p>Ensure these are installed on your system.</p>
 
