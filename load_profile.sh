@@ -1,5 +1,5 @@
 #!/bin/bash
-######################Functions######################
+###################### Functions ######################
 # Function to extract values from JSON
 extract_value() {
     echo "$profile" | jq -r "$1"
@@ -41,55 +41,62 @@ profile=$(cat "$profile_path")
 echo "Applying screen profile from $profile_path"
 primary_monitor=$(extract_value '.primaryMonitor')
 
-############## KDE Panel and Widget Configuration Loading ##############
-# Extract the KDE integration status from the JSON profile
-kde_integration=$(extract_value '.kde_integration')
+############## Konsave Integration ####################
+# Saves widgets and panel/KDE settings.
 
-if [ "$kde_integration" = "1" ]; then
-    kde_profiles_dir="$script_dir/profiles/kde"
-    kde_config_file="$kde_profiles_dir/$filename"
-    if [ -f "$kde_config_file" ]; then
-        cp "$kde_config_file" "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
-        echo "Applied KDE configuration from $kde_config_file to $HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
-        nohup plasmashell --replace &
-    else
-        echo "KDE configuration file not found at $kde_config_file"
-    fi
+# Set the variable to enable or disable Konsave
+konsave_enable=true
+konsave_integration=$(extract_value '.konsaveintegration')
+
+# Check if Konsave is enabled in the JSON config
+if [ "$konsave_integration" = 1 ]; then
+    konsave -a "$filename"
+    nohup plasmashell --replace &
+    echo "konsave -a $filename executed successfully"
 else
-    echo "KDE configuration loading is disabled for this profile."
+    echo "Konsave integration is disabled"
 fi
 
-# Iterate through the outputs from the JSON profile and apply the settings
+# Extract display outputs from JSON
 outputs=$(echo "$profile" | jq -c '.outputs[]')
+
+# First, enable necessary outputs
 for output in $outputs; do
-  name=$(echo "$output" | jq -r '.name')
-  enabled=$(echo "$output" | jq -r '.enabled')
-  mode=$(echo "$output" | jq -r '.currentModeId')
-  scale=$(echo "$output" | jq -r '.scale')
-  rotation=$(map_orientation "$(echo "$output" | jq -r '.rotation')")
-  pos_x=$(echo "$output" | jq -r '.pos.x')
-  pos_y=$(echo "$output" | jq -r '.pos.y')
-  vrrpolicy=$(echo "$output" | jq -r '.vrrPolicy')
+    name=$(echo "$output" | jq -r '.name')
+    enabled=$(echo "$output" | jq -r '.enabled')
 
-  echo "Processing output $name"
+    if [ "$enabled" == "true" ]; then
+        mode=$(echo "$output" | jq -r '.currentModeId')
+        scale=$(echo "$output" | jq -r '.scale')
+        rotation=$(map_orientation "$(echo "$output" | jq -r '.rotation')")
+        pos_x=$(echo "$output" | jq -r '.pos.x')
+        pos_y=$(echo "$output" | jq -r '.pos.y')
 
-  if [ "$enabled" == "true" ]; then
-    echo "Enabling output $name with mode $mode, scale $scale, rotation $rotation, position $pos_x,$pos_y"
-    kscreen-doctor output."$name".enable output."$name".mode."$mode" output."$name".scale."$scale" output."$name".rotation."$rotation" output."$name".position."$pos_x","$pos_y"
-    if [ "$name" == "$primary_monitor" ]; then
-      primary_output="output.$name.primary"
-      echo "Marking $name as primary output"
+        echo "Enabling output $name with mode $mode, scale $scale, rotation $rotation, position $pos_x,$pos_y"
+        kscreen-doctor output."$name".enable output."$name".mode."$mode" output."$name".scale."$scale" output."$name".rotation."$rotation" output."$name".position."$pos_x","$pos_y"
+        
+        if [ "$name" == "$primary_monitor" ]; then
+            primary_output="output.$name.primary"
+            echo "Marking $name as primary output"
+        fi
     fi
-  else
-    echo "Disabling output $name"
-    kscreen-doctor output."$name".disable
-  fi
+done
+
+# Then, disable unnecessary outputs
+for output in $outputs; do
+    name=$(echo "$output" | jq -r '.name')
+    enabled=$(echo "$output" | jq -r '.enabled')
+
+    if [ "$enabled" != "true" ]; then
+        echo "Disabling output $name"
+        kscreen-doctor output."$name".disable
+    fi
 done
 
 # Apply primary output setting if it exists
 if [ ! -z "$primary_output" ]; then
-  echo "Applying primary output setting for $primary_output"
-  kscreen-doctor $primary_output
+    echo "Applying primary output setting for $primary_output"
+    kscreen-doctor "$primary_output"
 fi
 
-echo "Screen profile applied"
+echo "Screen profile applied successfully"
