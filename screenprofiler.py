@@ -121,12 +121,12 @@ class MainWindow(QWidget):
         self._tray_icon.setContextMenu(menu)
 
     #Executes the screenprofilercmd.sh script."""
-    def screenprofilercmd(self, command, profile_name, kde_integration):
-        print(f"screenprofilercmd called with command: {command}, profile: {profile_name}, kde: {kde_integration}")
+    def screenprofilercmd(self, command, profile_name, enable_konsave):
+        print(f"screenprofilercmd called with command: {command}, profile: {profile_name}, konsave: {enable_konsave}")
         if os.name == 'posix':
             try:
-                kde_state = "1" if kde_integration else "0"
-                arguments = [self.screenprofilercmd_path, command, profile_name, kde_state]
+                konsave_state = "1" if enable_konsave else "0"
+                arguments = [self.screenprofilercmd_path, command, profile_name, konsave_state]
                 process = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if command == "remove" or command == "save":
                     self.update_tray_icon_menu() # Update menu after saving or removing
@@ -142,14 +142,14 @@ class MainWindow(QWidget):
 
 
     #Handles the creation of a new profile by executing the save script.
-    def handle_create_profile(self, profile_name, kde_integration, dialog):
+    def handle_create_profile(self, profile_name, enable_konsave, dialog):
         print("handle_create_profile called")
         if profile_name:
-            self.screenprofilercmd("save", profile_name, kde_integration)
+            self.screenprofilercmd("save", profile_name, enable_konsave)
             print("screenprofilercmd for save completed")
             self.update_tray_icon_menu()
             dialog.hide() # Close the new profile dialog
-            print(f"Profile created: {profile_name}, kde: {kde_integration}")
+            print(f"Profile created: {profile_name}, Konsave: {enable_konsave}")
         else:
             print("Profile name cannot be empty.")
 
@@ -162,19 +162,19 @@ class MainWindow(QWidget):
         # Create input fields and checkbox
         name_label = QLabel("Enter Profile Name:")
         name_input = QLineEdit()
-        kde_checkbox = QCheckBox("Enable KDE Integration")
-        kde_checkbox.setChecked(True)
+        konsave_checkbox = QCheckBox("Enable Konsave Integration")
+        konsave_checkbox.setChecked(True)
         # Create buttons
         create_button = QPushButton("Create")
         cancel_button = QPushButton("Cancel")
         # Add widgets to the layout
         layout.addWidget(name_label)
         layout.addWidget(name_input)
-        layout.addWidget(kde_checkbox)
+        layout.addWidget(konsave_checkbox)
         layout.addWidget(create_button)
         layout.addWidget(cancel_button)
         # Connect button signals to handlers
-        create_button.clicked.connect(lambda: self.handle_create_profile(name_input.text(), kde_checkbox.isChecked(), dialog))
+        create_button.clicked.connect(lambda: self.handle_create_profile(name_input.text(), konsave_checkbox.isChecked(), dialog))
         cancel_button.clicked.connect(dialog.hide)
 
         dialog.setLayout(layout)
@@ -189,7 +189,7 @@ class MainWindow(QWidget):
 
 
 
-        Version 0.0.7""")
+        Version 0.0.5""")
         close_button = QPushButton("Close")
         layout.addWidget(about_label)
         layout.addWidget(close_button)

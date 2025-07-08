@@ -74,7 +74,8 @@ for output in $outputs; do
 
         echo "Enabling output $name with mode $mode, scale $scale, rotation $rotation, position $pos_x,$pos_y"
         kscreen-doctor output."$name".enable output."$name".mode."$mode" output."$name".scale."$scale" output."$name".rotation."$rotation" output."$name".position."$pos_x","$pos_y"
-        
+        sleep 1
+
         if [ "$name" == "$primary_monitor" ]; then
             primary_output="output.$name.primary"
             echo "Marking $name as primary output"
@@ -90,8 +91,10 @@ for output in $outputs; do
     if [ "$enabled" != "true" ]; then
         echo "Disabling output $name"
         kscreen-doctor output."$name".disable
+        sleep 1
     fi
 done
+
 
 # Apply primary output setting if it exists
 if [ ! -z "$primary_output" ]; then
