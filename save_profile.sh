@@ -10,7 +10,7 @@ if [ $# -eq 1 ]; then
   echo "Using default Konsave state: $konsave_integration_value"
 elif [ $# -eq 2 ]; then
   filename="$1"
-  konsave_state="$2"
+  declare -i konsave_state="$2"
   # Validate Konsave state
   if [[ "$konsave_state" -eq 0 || "$konsave_state" -eq 1 ]]; then
     konsave_integration_value="$konsave_state"
@@ -31,7 +31,7 @@ profiles_dir="$script_dir/profiles"
 mkdir -p "$profiles_dir"
 
 # Fetch the current display configuration
-current_config=$(kscreen-console json)
+current_config=$(kscreen-console json | sed -n '/^{/,$p')
 
 # Fetch the primary monitor using xrandr
 primary_monitor=$(xrandr --query | grep "primary" | awk '{print $1}')
