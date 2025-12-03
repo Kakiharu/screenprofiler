@@ -1,78 +1,56 @@
 #!/bin/bash
-# Store the directory where the script is located
+
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
 
-# Function to display the help message
-display_help() {
-    echo "####################################################################################################"
-    echo "# Save/Load/Remove Profile"
-    echo "#     Usage: $0 {save|load|remove} [profilename] [konsave enabled (0 or 1)]"
-    echo "#       Example: $0 save example 1"
-    echo "#       Example: $0 load example"
-    echo "# List Profiles"
-    echo "#     Usage: $0 list"
-	echo "#"
-    echo "# Konsave  - Saves kde widgets and settings."
-    echo "####################################################################################################"
-}
-
-# Check if at least one argument is provided
-if [ $# -lt 1 ]; then
-    display_help
-    exit 1
-fi
-
 command=$1
 filename=$2
-konsave_arg=$3
+flag=$3
 
 case $command in
-    help|-help|--help)
-        display_help
-        exit 0
-        ;;
-    #Save
     save)
-        if [ -z "$filename" ]; then
-            echo "Usage: $0 save filename [konsave_state (0 or 1)]"
-            exit 1
-        fi
-        "$script_dir/save_profile.sh" "$filename" "$konsave_arg"
+        [ -z "$filename" ] && echo "Usage: $0 save <name> [0|1]" && exit 1
+        "$script_dir/save_profile.sh" "$filename" "$flag"
         ;;
-		
-    #Load
     load)
-        if [ -z "$filename" ]; then
-            echo "Usage: $0 load filename"
-            exit 1
-        fi
+        [ -z "$filename" ] && echo "Usage: $0 load <name>" && exit 1
         "$script_dir/load_profile.sh" "$filename"
         ;;
-		
-	#Remove 
     remove)
-        if [ -z "$filename" ]; then
-            echo "Usage: $0 remove filename"
-            exit 1
-        fi
-        if [ ! -f "$profiles_dir/$filename" ]; then
-            echo "Profile not found: $filename"
-            exit 1
-        fi
-        rm "$profiles_dir/$filename"
-        echo "Profile removed: $filename"
+        [ -z "$filename" ] && echo "Usage: $0 remove <name>" && exit 1
+        rm -rf "$profiles_dir/$filename"
+        echo "Profile $filename removed"
         ;;
-	#List
     list)
         echo "Available profiles:"
-        for file in "$profiles_dir"/*; do
-            echo "$(basename "$file") "
-        done
-        echo
+        for dir in "$profiles_dir"/*; do
+            [ -d "$dir" ] || continue
+            echo "$(basename "$dir")"
+        done | sort
+        ;;
+    tray)
+        python3 "$script_dir/screenprofiler.py" &
+        ;;
+    uninstall)
+        if [ -x "$script_dir/uninstall.sh" ]; then
+            "$script_dir/uninstall.sh"
+        else
+            echo "Uninstall script not found at $script_dir/uninstall.sh"
+        fi
+        ;;
+    ""|help|--help|-h)
+        echo "Usage: $0 <command> [args]"
+        echo "Commands:"
+        echo "  save <name> [0|1]   Save profile (0=monitors only, 1=with KDE configs)"
+        echo "  load <name>         Load profile"
+        echo "  remove <name>       Delete profile"
+        echo "  list                List profiles (alphabetical)"
+        echo "  tray                Launch the Screen Profiler tray app"
+        echo "  uninstall           Run the uninstall script"
         ;;
     *)
-        echo "Invalid command. Use 'help', 'save', 'load', 'remove', 'list'."
+        echo "Invalid command: $command"
+        echo "Run '$0 help' for usage."
         exit 1
         ;;
 esac

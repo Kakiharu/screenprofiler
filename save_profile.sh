@@ -1,61 +1,55 @@
 #!/bin/bash
+source "$(dirname "$(realpath "$0")")/common.sh"
 
-# Define the default Konsave state if not provided (1 for enabled, 0 for disabled)
-default_konsave_state=1
+filename="$1"
+save_kde="$2"
 
-# Check the number of arguments
-if [ $# -eq 1 ]; then
-  filename="$1"
-  konsave_integration_value="$default_konsave_state"
-  echo "Using default Konsave state: $konsave_integration_value"
-elif [ $# -eq 2 ]; then
-  filename="$1"
-  konsave_state="$2"
-  # Validate Konsave state
-  if [[ "$konsave_state" -eq 0 || "$konsave_state" -eq 1 ]]; then
-    konsave_integration_value="$konsave_state"
-  else
-    echo "Invalid Konsave state provided: $konsave_state. Use 0 or 1."
+# Validate flag
+if [ -z "$save_kde" ]; then
+    save_kde=1
+    echo "No flag provided. Defaulting to saving KDE configs."
+    echo "These files control important parts of your desktop:"
+    echo "  • plasma-org.kde.plasma.desktop-appletsrc → Panels, widgets, and their arrangement"
+    echo "  • kwinrc → Window manager settings (tiling, borders, effects)"
+    echo "  • kdeglobals → Global appearance (colors, fonts, styles)"
+    echo "  • plasmarc → Plasma shell preferences (general behavior)"
+    echo "  • kscreenlockerrc → Screen locker settings (lock screen behavior)"
+    echo "Together, these files restore your desktop’s look, feel, and layout."
+elif [ "$save_kde" != "0" ] && [ "$save_kde" != "1" ]; then
+    echo "Invalid flag: $save_kde"
+    echo "Usage: save_profile.sh <name> [0|1]"
     exit 1
-  fi
-else
-  echo "Usage: $0 filename [konsave_state (0 or 1)]"
-  exit 1
 fi
 
-# Determine the script's directory
-script_dir="$(dirname "$(realpath "$0")")"
-profiles_dir="$script_dir/profiles"
+mkdir -p "$profiles_dir/$filename"
 
-# Create the profiles directory if it doesn't exist
-mkdir -p "$profiles_dir"
-
-# Fetch the current display configuration
-current_config=$(kscreen-console json)
-
-# Fetch the primary monitor using xrandr
+# Capture display config
+current_config=$(kscreen-console json | sed -n '/^{/,$p')
 primary_monitor=$(xrandr --query | grep "primary" | awk '{print $1}')
 
-# Add primary monitor information to the JSON
-current_config=$(echo "$current_config" | jq --arg pm "$primary_monitor" '. + {primaryMonitor: $pm}')
+echo "$current_config" > "$profiles_dir/$filename/display.json"
+echo "Saved display config to $profiles_dir/$filename/display.json"
 
-# Add Konsave integration status to the JSON
-current_config=$(echo "$current_config" | jq --arg ki "$konsave_integration_value" '. + {konsaveintegration: ($ki | tonumber)}')
+# Save KDE configs if flag=1
+if [ "$save_kde" == "1" ]; then
+    declare -A kde_files=(
+      ["plasma-org.kde.plasma.desktop-appletsrc"]="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+      ["kwinrc"]="$HOME/.config/kwinrc"
+      ["kdeglobals"]="$HOME/.config/kdeglobals"
+      ["plasmarc"]="$HOME/.config/plasmarc"
+      ["kscreenlockerrc"]="$HOME/.config/kscreenlockerrc"
+    )
 
-# Save the configuration to the specified file in the profiles directory
-echo "$current_config" > "$profiles_dir/$filename"
-
-echo "Screen profile saved to $profiles_dir/$filename with Konsave state: $konsave_integration_value"
-
-
-############## Konsave Integration ####################
-# Saves widgets and panel/kde settings.
-
-# Check if konsave command exists and konsave_integration_value is 1
-if [ "$konsave_integration_value" -eq 1 ] && command -v konsave &> /dev/null; then
-  # Run konsave command
-  konsave -s "$filename" -f
-  echo "konsave -s $filename executed successfully"
+    for name in "${!kde_files[@]}"; do
+      src="${kde_files[$name]}"
+      if [ -f "$src" ]; then
+        cp "$src" "$profiles_dir/$filename/$name"
+        echo "Saved $name"
+      fi
+    done
 else
-  echo "Konsave integration is disabled for this profile or konsave command not found."
+    echo "Skipped saving KDE configs (flag=0)"
 fi
+
+# Write metadata (save_kde + primary monitor)
+echo "{ \"save_kde\": $save_kde, \"primaryMonitor\": \"$primary_monitor\" }" > "$profiles_dir/$filename/meta.json"

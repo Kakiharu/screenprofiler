@@ -1,70 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <h1>Screen Profiler</h1>
-    <p>A program for helping switch between monitor layouts and resolutions in KDE. You can use the base scripts to simply set your resolution.
-    There is also a python script that creates a system tray icon for easy gui interaction. You can save, load, list, and remove screen profiles.</p>
+  <h1>Screen Profiler</h1>
+  <p>
+    Screen Profiler makes it easy to switch between different monitor setups on Linux with KDE. 
+    You can save your current screen layout, then quickly load it later without having to reconfigure everything. 
+    There’s also a simple tray app so you can manage profiles with a mouse click.
+  </p>
 
-  <p>To get started, use the KDE display configuration to set up your screens exactly as you like them. Once everything looks perfect, run the script to save your configuration. Now, you can easily switch between any of your saved configurations whenever you need to.</p>
-  <p>KDE integration is included and can be used to let you save and apply your Linux customizations like widgets and panels on certain screens; you must have it installed for this feature to work. If KDE is enabled on the profile creation, it will auto-load on the profile every time. Make sure to save before loading a different profile so you don't lose any saves.
-      <br>For example, going from multi-monitor to single monitor and having its own panel.<br>
+  <h2>How it Works</h2>
+  <p>
+    1. Set up your monitors the way you like using KDE’s display settings.<br>
+    2. Save that setup as a "profile".<br>
+    3. Later, load the profile to instantly restore your layout.<br>
+    You can create as many profiles as you want (for example: "TV", "Gaming", "Laptop Only").
+  </p>
 
   <h2>Easy Installation</h2>
-  <ol>
-      <li>
-          <p>Download the install.sh</p>
-      </li>
-      <li>
-          <p>Just place the installer where you want to install it and run. It will automatically add itself to <code>~/.local/bin</code> as <code>screenprofilercmd</code> so you can easily run commands.</p>
-      </li>
-      <li>
-          <p>Don't forget to give it execution rights.</p>
-      </li>
-  </ol>
+  <p>
+    The installer places Screen Profiler in your home directory (<code>~/screenprofiler</code>) 
+    and adds a shortcut command called <code>screenprofilercmd</code> into your PATH.
+  </p>
+  <p>
+    Quick one‑liner install:
+  </p>
+  <pre><code>curl -s https://raw.githubusercontent.com/Kakiharu/screenprofiler/main/install.sh | bash</code></pre>
 
   <h2>Manual Installation</h2>
   <ol>
-      <li>
-          <p>Clone the repository:</p>
-          <pre><code>git clone https://github.com/kakiharu/screenprofiler.git
-cd screenprofiler</code></pre>
-        </li>
-        <li>
-            <p>Make the scripts executable:</p>
-            <pre><code>chmod +x screenprofilercmd.sh
+    <li>
+      Clone the repository:
+      <pre><code>git clone https://github.com/Kakiharu/screenprofiler.git ~/screenprofiler
+cd ~/screenprofiler</code></pre>
+    </li>
+    <li>
+      Make the scripts executable:
+      <pre><code>chmod +x screenprofilercmd.sh
 chmod +x save_profile.sh
 chmod +x load_profile.sh
 chmod +x screenprofiler.py</code></pre>
-        </li>
-    </ol>
+    </li>
+    <li>
+      Add a symlink so you can run it easily:<br>
+      <pre><code>
+# If you have root access:
+sudo ln -sf ~/screenprofiler/screenprofilercmd.sh /usr/bin/screenprofilercmd
+
+# Otherwise (user-only install):
+ln -sf ~/screenprofiler/screenprofilercmd.sh ~/.local/bin/screenprofilercmd
+      </code></pre>
+    </li>
+  </ol>
 
   <h2>Usage</h2>
-  <p>Save/Load/Remove Profile<br>
-      Usage: <code>screenprofilercmd {save|load|remove} [profilename] [KDE enabled (0 or 1)]</code><br>
-      Example: <code>screenprofilercmd save example 1</code> - This will save KDE settings<br>
-      Example: <code>screenprofilercmd load example</code><br>
-  List Profiles<br>
-      Usage: <code>screenprofilercmd list</code></p>
-  <p>Help<br>
-  The help command (or <code>-help</code> or <code>--help</code>) displays usage instructions.<br>
-  Usage: <code>screenprofilercmd help</code></p>
-  <br><br>
+  <p>
+    <strong>Save a Profile</strong><br>
+    Usage: <code>screenprofilercmd save &lt;name&gt; [0|1]</code><br>
+    - Use <code>0</code> if you only want to save the monitor layout.<br>
+    - Use <code>1</code> if you also want to save KDE desktop settings (like panels and widgets).<br>
+    Example: <code>screenprofilercmd save worksetup 1</code>
+  </p>
+
+  <p>
+    <strong>Load a Profile</strong><br>
+    Usage: <code>screenprofilercmd load &lt;name&gt;</code><br>
+    Example: <code>screenprofilercmd load worksetup</code>
+  </p>
+
+  <p>
+    <strong>Remove a Profile</strong><br>
+    Usage: <code>screenprofilercmd remove &lt;name&gt;</code>
+  </p>
+
+  <p>
+    <strong>List Profiles</strong><br>
+    Usage: <code>screenprofilercmd list</code><br>
+    Shows all saved profiles in alphabetical order.
+  </p>
+
+  <p>
+    <strong>Tray App</strong><br>
+    Usage: <code>screenprofilercmd tray</code><br>
+    Opens a system tray icon where you can save, load, and remove profiles with a click.
+  </p>
+
+  <p>
+    <strong>Uninstall</strong><br>
+    Usage: <code>screenprofilercmd uninstall</code><br>
+    Runs the uninstall script to remove Screen Profiler from your system.
+  </p>
 
   <h2>Dependencies</h2>
-  <p>The following dependencies are required for the scripts to work correctly:</p>
+  <p>
+    Since Screen Profiler is designed for KDE, you already have the core display tools. 
+    You just need these extras:
+  </p>
   <ul>
-      <li>kscreen</li>
-      <li>xrandr</li>
-      <li>jq</li>
-      <br>
-      <p>Python Dependencies</p>
-      <li>PyQt5</li>
+    <li>jq</li>
+    <li>Python 3 + PyQt5 (for the tray app)</li>
   </ul>
-  <p>Ensure these are installed on your system.</p>
 
   <h2>License</h2>
   <p>This project is licensed under the GNU GPLv3 License. See the LICENSE file for details.</p>
