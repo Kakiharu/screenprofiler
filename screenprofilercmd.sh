@@ -38,7 +38,7 @@ case $command in
     tray)
         #Ensure Python runs with the correct working directory
         cd "$script_dir" || exit 1
-        exec python3 "$script_dir/screenprofiler.py" &
+        nohup python3 "$script_dir/screenprofiler.py" >/dev/null 2>&1 &
         ;;
     uninstall)
         if [ -x "$script_dir/uninstall.sh" ]; then
