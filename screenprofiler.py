@@ -202,11 +202,24 @@ class MainWindow(QWidget):
         dialog.setLayout(layout)
         dialog.exec_()
 
+    # Reads version from common.sh
+    def get_version(self):
+        common_path = os.path.join(os.getcwd(), "common.sh")
+        try:
+            with open(common_path) as f:
+                for line in f:
+                    if line.startswith("SCREENPROFILER_VERSION="):
+                        return line.split("=")[1].strip().strip('"')
+        except Exception as e:
+            print(f"Error reading version: {e}")
+        return "unknown"
+
     def open_about_window(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("About")
         layout = QVBoxLayout()
-        about_label = QLabel("Screen Profiler\n\nVersion 0.0.9")
+        version = self.get_version()
+        about_label = QLabel(f"Screen Profiler\n\nVersion {version}")
         close_button = QPushButton("Close")
         layout.addWidget(about_label)
         layout.addWidget(close_button)

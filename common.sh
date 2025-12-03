@@ -2,6 +2,9 @@
 
 # Shared helper functions and variables
 
+# Version number for Screen Profiler
+SCREENPROFILER_VERSION="0.1.0"
+
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
 

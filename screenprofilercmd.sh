@@ -3,6 +3,13 @@
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
 
+# Pull in common settings (including version)
+if [ -f "$script_dir/common.sh" ]; then
+    source "$script_dir/common.sh"
+else
+    SCREENPROFILER_VERSION="unknown"
+fi
+
 command=$1
 filename=$2
 flag=$3
@@ -38,7 +45,12 @@ case $command in
             echo "Uninstall script not found at $script_dir/uninstall.sh"
         fi
         ;;
+    version|-v|--version)
+        echo "Screen Profiler version $SCREENPROFILER_VERSION"
+        ;;
     ""|help|--help|-h)
+        echo -e "\033[0;32mScreen Profiler version $SCREENPROFILER_VERSION\033[0m"
+        echo
         echo "Usage: $0 <command> [args]"
         echo "Commands:"
         echo "  save <name> [0|1]   Save profile (0=monitors only, 1=with KDE configs)"
@@ -47,6 +59,7 @@ case $command in
         echo "  list                List profiles (alphabetical)"
         echo "  tray                Launch the Screen Profiler tray app"
         echo "  uninstall           Run the uninstall script"
+        echo "  version             Show version number"
         ;;
     *)
         echo "Invalid command: $command"
