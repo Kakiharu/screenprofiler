@@ -49,6 +49,7 @@ case $command in
         ;;
     version|-v|--version)
         echo "Screen Profiler version $SCREENPROFILER_VERSION"
+        echo "Donations Welcome: https://linktr.ee/kakiharu"
         ;;
     ""|help|--help|-h)
         echo -e "\033[0;32mScreen Profiler version $SCREENPROFILER_VERSION\033[0m"

@@ -140,7 +140,7 @@ class MainWindow(QWidget):
 
         # Donate menu
         donate_action = QAction("Donate", self)
-        donate_action.triggered.connect(lambda: webbrowser.open("patreon.com/user?u=32768912"))
+        donate_action.triggered.connect(lambda: webbrowser.open("https://linktr.ee/kakiharu"))
         menu.addAction(donate_action)
         menu.addSeparator()
 
