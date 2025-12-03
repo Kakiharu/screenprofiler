@@ -7,10 +7,14 @@ echo "Installing Screen Profiler..."
 if [ ! -d "$HOME/screenprofiler" ]; then
     git clone https://github.com/Kakiharu/screenprofiler.git "$HOME/screenprofiler"
 else
+    else
     echo "Repo already exists at ~/screenprofiler"
     cd "$HOME/screenprofiler"
-    echo "Updating repo..."
-    git pull
+    echo "Forcing update from remote..."
+    git fetch origin
+    git reset --hard origin/main
+fi
+
 fi
 cd "$HOME/screenprofiler" || exit 1
 
