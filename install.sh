@@ -13,8 +13,6 @@ else
     git fetch origin
     git reset --hard origin/main
 fi
-
-fi
 cd "$HOME/screenprofiler" || exit 1
 
 # Make scripts executable
