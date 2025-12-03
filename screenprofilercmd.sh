@@ -36,7 +36,9 @@ case $command in
         done | sort
         ;;
     tray)
-        python3 "$script_dir/screenprofiler.py" &
+        #Ensure Python runs with the correct working directory
+        cd "$script_dir" || exit 1
+        exec python3 "$script_dir/screenprofiler.py" &
         ;;
     uninstall)
         if [ -x "$script_dir/uninstall.sh" ]; then

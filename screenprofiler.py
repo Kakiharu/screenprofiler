@@ -14,14 +14,17 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Screen Profiler")
-        self.profiles_dir = os.path.join(os.getcwd(), "profiles")
-        self.screenprofilercmd_path = os.path.join(os.getcwd(), "screenprofilercmd.sh")
+
+        #Always resolve paths relative to this file, not cwd
+        self.base_dir = os.path.dirname(os.path.realpath(__file__))
+        self.profiles_dir = os.path.join(self.base_dir, "profiles")
+        self.screenprofilercmd_path = os.path.join(self.base_dir, "screenprofilercmd.sh")
+
         self._tray_icon = None
         self._profiles = []  # List of tuples (name, save_kde_flag, primary_monitor)
         self._create_profiles_directory()
         self.init_tray_icon()
 
-    # Creates the profiles directory if it doesn't exist.
     def _create_profiles_directory(self):
         if not os.path.exists(self.profiles_dir):
             try:
@@ -29,16 +32,16 @@ class MainWindow(QWidget):
                 print(f"Created profiles directory: {self.profiles_dir}")
             except OSError as e:
                 print(f"Error creating profiles directory: {e}")
-
     # Initializes the system tray icon.
     def init_tray_icon(self):
         if self._tray_icon is None:
-            self._tray_icon = QSystemTrayIcon(QIcon("resources/mainicon.png"))
+            icon_path = os.path.join(self.base_dir, "resources", "mainicon.png")
+            self._tray_icon = QSystemTrayIcon(QIcon(icon_path))
             self._tray_icon.setToolTip("Screen Profiler")
             self.update_tray_icon_menu()
             self._tray_icon.show()
-            # ✅ Left-click support
             self._tray_icon.activated.connect(self.on_tray_activated)
+
 
     # Handle left-click activation
     def on_tray_activated(self, reason):
@@ -66,7 +69,7 @@ class MainWindow(QWidget):
                         except Exception as e:
                             print(f"Error reading metadata for {d}: {e}")
                     self._profiles.append((d, save_kde, primary_monitor))
-                # ✅ Sort alphabetically by profile name
+                #Sort alphabetically by profile name
                 self._profiles.sort(key=lambda tup: tup[0].lower())
             except Exception as e:
                 print(f"Error loading profiles: {e}")
