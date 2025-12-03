@@ -3,7 +3,7 @@
 # Shared helper functions and variables
 
 # Version number for Screen Profiler
-SCREENPROFILER_VERSION="0.1.0"
+SCREENPROFILER_VERSION="0.1.1"
 
 script_dir="$(dirname "$(realpath "$0")")"
 profiles_dir="$script_dir/profiles"
