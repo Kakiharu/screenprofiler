@@ -38,12 +38,23 @@ done
 
 restart_plasma
 
+# Get list of currently connected outputs
+current_outputs=$(kscreen-console json | sed -n '/^{/,$p' | jq -r '.outputs[].name')
+
+# Build a hash of outputs that exist in the profile
+declare -A profile_outputs
+outputs=$(echo "$profile" | jq -c '.outputs[]')
+for output in $outputs; do
+    name=$(echo "$output" | jq -r '.name')
+    profile_outputs["$name"]=1
+done
+
 # Build a single atomic kscreen-doctor call
 cmd=(kscreen-doctor)
 primary_arg=""
 enabled_count=0
 
-outputs=$(echo "$profile" | jq -c '.outputs[]')
+# Configure outputs that are in the profile
 for output in $outputs; do
     name=$(echo "$output" | jq -r '.name')
     enabled=$(echo "$output" | jq -r '.enabled')
@@ -69,6 +80,14 @@ for output in $outputs; do
         fi
     else
         cmd+=("output.$name.disable")
+    fi
+done
+
+# Disable any currently connected outputs that aren't in the profile
+for current_output in $current_outputs; do
+    if [ -z "${profile_outputs[$current_output]}" ]; then
+        echo "Disabling extra output not in profile: $current_output"
+        cmd+=("output.$current_output.disable")
     fi
 done
 
