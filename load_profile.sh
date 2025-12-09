@@ -38,30 +38,57 @@ done
 
 restart_plasma
 
-# Apply monitor layout
+# Build a single atomic kscreen-doctor call
+cmd=(kscreen-doctor)
+primary_arg=""
+enabled_count=0
+
 outputs=$(echo "$profile" | jq -c '.outputs[]')
 for output in $outputs; do
     name=$(echo "$output" | jq -r '.name')
     enabled=$(echo "$output" | jq -r '.enabled')
+
     if [ "$enabled" == "true" ]; then
+        ((enabled_count++))
         mode=$(echo "$output" | jq -r '.currentModeId')
         scale=$(echo "$output" | jq -r '.scale')
         rotation=$(map_orientation "$(echo "$output" | jq -r '.rotation')")
         pos_x=$(echo "$output" | jq -r '.pos.x')
         pos_y=$(echo "$output" | jq -r '.pos.y')
-        kscreen-doctor output."$name".enable output."$name".mode."$mode" \
-                       output."$name".scale."$scale" output."$name".rotation."$rotation" \
-                       output."$name".position."$pos_x","$pos_y"
+
+        cmd+=(
+            "output.$name.enable"
+            "output.$name.mode.$mode"
+            "output.$name.scale.$scale"
+            "output.$name.rotation.$rotation"
+            "output.$name.position.$pos_x,$pos_y"
+        )
+
         if [ "$name" == "$primary_monitor" ]; then
-            primary_output="output.$name.primary"
+            primary_arg="output.$name.primary"
         fi
     else
-        kscreen-doctor output."$name".disable
+        cmd+=("output.$name.disable")
     fi
 done
 
-if [ ! -z "$primary_output" ]; then
-    kscreen-doctor "$primary_output"
+# Guard: never apply an all-off state
+if [ "$enabled_count" -eq 0 ]; then
+    echo "No enabled outputs in profile; refusing to apply an all-off state."
+    exit 1
 fi
+
+# Add primary if present
+if [ -n "$primary_arg" ]; then
+    cmd+=("$primary_arg")
+fi
+
+# Debug: print the exact command before running
+printf 'kscreen-doctor'
+for a in "${cmd[@]:1}"; do printf ' %q' "$a"; done
+printf '\n'
+
+# Execute once, atomically
+"${cmd[@]}"
 
 echo "Profile $filename applied successfully"
