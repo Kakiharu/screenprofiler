@@ -14,6 +14,16 @@ command=$1
 filename=$2
 flag=$3
 
+# Check dependencies for all commands except help/version
+case $command in
+    ""|help|--help|-h|version|-v|--version)
+        # Don't check dependencies for help/version
+        ;;
+    *)
+        check_dependencies
+        ;;
+esac
+
 case $command in
     save)
         [ -z "$filename" ] && echo "Usage: $0 save <name> [0|1]" && exit 1
