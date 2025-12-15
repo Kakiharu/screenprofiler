@@ -20,6 +20,13 @@ class MainWindow(QWidget):
         self.profiles_dir = os.path.join(self.base_dir, "profiles")
         self.screenprofilercmd_path = os.path.join(self.base_dir, "screenprofilercmd.sh")
 
+        self._config = dict()
+        if 'config.toml' in os.listdir(self.base_dir):
+            import tomllib
+            with open('config.toml', 'rb') as config_file:
+                self._config = tomllib.load(config_file)
+        
+        self._tray_icon_themed_name = self._config.get('tray-icon-themed-name', None)
         self._tray_icon = None
         self._profiles = []  # List of tuples (name, save_kde_flag, primary_monitor)
         self._create_profiles_directory()
@@ -36,7 +43,7 @@ class MainWindow(QWidget):
     def init_tray_icon(self):
         if self._tray_icon is None:
             icon_path = os.path.join(self.base_dir, "resources", "mainicon.png")
-            self._tray_icon = QSystemTrayIcon(QIcon(icon_path))
+            self._tray_icon = QSystemTrayIcon(QIcon.fromTheme(self._tray_icon_themed_name, QIcon(icon_path)))     
             self._tray_icon.setToolTip("Screen Profiler")
             self.update_tray_icon_menu()
             self._tray_icon.show()
