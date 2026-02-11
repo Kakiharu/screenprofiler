@@ -111,16 +111,19 @@ for output in $outputs; do
         ((enabled_count++))
 
         # Get display settings
-        mode=$(echo "$output" | jq -r '.currentModeId')
+        mode_id=$(echo "$output" | jq -r '.currentModeId')
         scale=$(echo "$output" | jq -r '.scale')
         rotation=$(map_orientation "$(echo "$output" | jq -r '.rotation')")
         pos_x=$(echo "$output" | jq -r '.pos.x')
         pos_y=$(echo "$output" | jq -r '.pos.y')
 
-        # Add configuration commands for this output
+        # Extract the specific mode string (e.g., "1920x1080@60") from display.json
+        mode_string=$(echo "$output" | jq -r ".modes[] | select(.id == \"$mode_id\") | .name")
+
+        # Add configuration commands using the mode string format you requested
         cmd+=(
             "output.$name.enable"
-            "output.$name.mode.$mode"
+            "output.$name.mode.$mode_string"
             "output.$name.scale.$scale"
             "output.$name.rotation.$rotation"
             "output.$name.position.$pos_x,$pos_y"
@@ -151,7 +154,6 @@ done
 # Never apply a configuration with all outputs disabled
 if [ "$enabled_count" -eq 0 ]; then
     print_error "No enabled outputs in profile"
-    print_error "Refusing to apply an all-off state"
     exit 1
 fi
 
