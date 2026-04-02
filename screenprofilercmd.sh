@@ -133,11 +133,14 @@ case $command in
         # Change to script directory to ensure correct working directory
         cd "$script_dir" || exit 1
 
-        # Launch the Python tray application in the background
-        # Redirect output to /dev/null to avoid cluttering terminal
-        nohup python3 "$script_dir/screenprofiler.py" >/dev/null 2>&1 &
-
-        print_success "Screen Profiler tray application launched"
+        # The Python script self-daemonizes: it forks, the parent exits
+        # with the appropriate exit code, and the child runs the tray app.
+        if python3 "$script_dir/screenprofiler.py"; then
+            print_success "Screen Profiler tray application launched"
+        else
+            print_error "Failed to launch tray application"
+            exit 1
+        fi
         ;;
 
     # ------------------------------------------------------------------------
