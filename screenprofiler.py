@@ -277,7 +277,20 @@ class MainWindow(QWidget):
         dialog.exec_()
 
 if __name__ == '__main__':
+    # Fork to background — parent exits, child continues as the tray app
+    pid = os.fork()
+    if pid > 0:
+        sys.exit(0)
+
+    # Child: detach from terminal and run the tray app
+    os.setsid()
+
+    # Redirect stdout/stderr so the detached process doesn't hold terminal fds
+    devnull = os.open(os.devnull, os.O_RDWR)
+    os.dup2(devnull, sys.stdout.fileno())
+    os.dup2(devnull, sys.stderr.fileno())
+    os.close(devnull)
+
     app = QApplication(sys.argv)
     window = MainWindow()
-    exit_code = app.exec_()
-    sys.exit(exit_code)
+    sys.exit(app.exec_())
