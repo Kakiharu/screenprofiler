@@ -4,12 +4,27 @@ import subprocess
 import sys
 import webbrowser
 import json
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox,
-    QPushButton, QDialog, QSystemTrayIcon, QMenu, QAction, QMessageBox,
-    QComboBox
-)
-from PyQt5.QtGui import QIcon, QCursor
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox,
+        QPushButton, QDialog, QSystemTrayIcon, QMenu, QMessageBox, QComboBox
+    )
+    from PyQt6.QtGui import QIcon, QCursor, QAction
+    TRAY_TRIGGER = QSystemTrayIcon.ActivationReason.Trigger
+except ImportError:
+    from PyQt5.QtWidgets import (
+        QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox,
+        QPushButton, QDialog, QSystemTrayIcon, QMenu, QAction, QMessageBox,
+        QComboBox
+    )
+    from PyQt5.QtGui import QIcon, QCursor
+    TRAY_TRIGGER = QSystemTrayIcon.Trigger
+
+def qt_exec(obj):
+    """Compat helper: exec() in Qt6, exec_() in Qt5."""
+    if hasattr(obj, 'exec'):
+        return obj.exec()
+    return obj.exec_()
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -62,7 +77,7 @@ class MainWindow(QWidget):
             self._tray_icon.activated.connect(self.on_tray_activated)
 
     def on_tray_activated(self, reason):
-        if reason == QSystemTrayIcon.Trigger:
+        if reason == TRAY_TRIGGER:
             if self._tray_icon.contextMenu():
                 self._tray_icon.contextMenu().popup(QCursor.pos())
 
@@ -201,7 +216,7 @@ class MainWindow(QWidget):
         cancel_button.clicked.connect(dialog.hide)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        qt_exec(dialog)
 
     def open_settings_window(self):
         dialog = QDialog(self)
@@ -237,7 +252,7 @@ class MainWindow(QWidget):
         cancel_button.clicked.connect(dialog.hide)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        qt_exec(dialog)
 
     def handle_save_settings(self, selected_icon, dialog):
         new_icon_path = os.path.join(self.resources_dir, selected_icon)
@@ -274,10 +289,10 @@ class MainWindow(QWidget):
         layout.addWidget(close_button)
         close_button.clicked.connect(dialog.hide)
         dialog.setLayout(layout)
-        dialog.exec_()
+        qt_exec(dialog)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
-    exit_code = app.exec_()
+    exit_code = qt_exec(app)
     sys.exit(exit_code)
