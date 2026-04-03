@@ -116,6 +116,7 @@ for output in $outputs; do
         rotation=$(map_orientation "$(echo "$output" | jq -r '.rotation')")
         pos_x=$(echo "$output" | jq -r '.pos.x')
         pos_y=$(echo "$output" | jq -r '.pos.y')
+        priority=$(echo "$output" | jq -r '.priority')
 
         # Extract the specific mode string (e.g., "1920x1080@60") from display.json
         mode_string=$(echo "$output" | jq -r ".modes[] | select(.id == \"$mode_id\") | .name")
@@ -127,6 +128,7 @@ for output in $outputs; do
             "output.$name.scale.$scale"
             "output.$name.rotation.$rotation"
             "output.$name.position.$pos_x,$pos_y"
+            "output.$name.priority.$priority"
         )
 
         # Mark as primary if this is the primary monitor
