@@ -16,18 +16,34 @@ echo "════════════════════════�
 # 1. Repository Management
 # ============================================================================
 
-# Target directory for the application files
 INSTALL_DIR="$HOME/screenprofiler"
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo "[INFO] Cloning repository into $INSTALL_DIR..."
     git clone https://github.com/Kakiharu/screenprofiler.git "$INSTALL_DIR"
 else
-    echo "[INFO] Repository already exists. Performing an update..."
-    cd "$INSTALL_DIR"
-    # Force the local branch to match the remote exactly
-    git fetch origin
-    git reset --hard origin/main
+    # Check if it is actually a git repository
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        echo "[INFO] Repository exists. Performing a 'Boss Mode' update..."
+        cd "$INSTALL_DIR"
+        git fetch origin
+        git reset --hard origin/main
+    else
+        echo "[WARN] $INSTALL_DIR exists but is not a git repo. Reinstalling..."
+        # Move profiles to a temp spot so we don't lose them!
+        if [ -d "$INSTALL_DIR/profiles" ]; then
+            mv "$INSTALL_DIR/profiles" "$HOME/screenprofiler_profiles_backup"
+        fi
+
+        rm -rf "$INSTALL_DIR"
+        git clone https://github.com/Kakiharu/screenprofiler.git "$INSTALL_DIR"
+
+        # Restore profiles if they were backed up
+        if [ -d "$HOME/screenprofiler_profiles_backup" ]; then
+            mv "$HOME/screenprofiler_profiles_backup" "$INSTALL_DIR/profiles"
+            echo "[OK] Restored your existing profiles."
+        fi
+    fi
 fi
 
 cd "$INSTALL_DIR" || exit 1
