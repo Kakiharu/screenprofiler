@@ -28,6 +28,8 @@ IGNORE_LIST=(
     "*.tmp"
     "push_new.sh"
     "reload.sh"
+    "test_install.sh"
+    "test_install.sh"
 )
 
 # ============================================================================

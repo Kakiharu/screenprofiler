@@ -7,7 +7,7 @@
 # Version Information
 # ============================================================================
 
-SCREENPROFILER_VERSION="0.3.0"
+SCREENPROFILER_VERSION="0.4.0"
 
 # ============================================================================
 # Color Definitions
@@ -138,7 +138,7 @@ map_orientation() {
 # ============================================================================
 
 # Restart the Plasma desktop shell
-# This is necessary after restoring KDE configuration files
+# This is necessary after restoring KDE configuration files or the updating the tray app.
 restart_plasma() {
     print_info "Restarting Plasma shell..."
 

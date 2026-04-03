@@ -8,8 +8,8 @@
         "Icon": "applications-games",
         "Id": "org.kde.screenprofiler",
         "Name": "Screen Profiler",
-        "Version": "0.3.0",
-        "Website": "www.google.com"
+        "Version": "0.4.0",
+        "Website": "www.homelessbacon.com"
 
     },
     "X-Plasma-API-Minimum-Version": "6.0"

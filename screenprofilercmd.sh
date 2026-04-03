@@ -125,17 +125,78 @@ case $command in
 
 
     # ------------------------------------------------------------------------
-    # Launch Tray Application
+    # Update Screen Profiler
+    # ------------------------------------------------------------------------
+    update)
+        update_script="$script_dir/install.sh"
+
+        if [ -x "$update_script" ]; then
+            print_info "Starting update via install.sh..."
+            # Execute the installer
+            bash "$update_script"
+        else
+            print_error "Update script (install.sh) not found or not executable at $update_script"
+            exit 1
+        fi
+        ;;
+    # ------------------------------------------------------------------------
+    # Launch Tray Application / Manage Applet
     # ------------------------------------------------------------------------
     tray)
-        # Change to script directory to ensure correct working directory
-        cd "$script_dir" || exit 1
+        APPLET_ID="org.kde.screenprofiler"
+        APPLET_ROOT="$script_dir/org.kde.screenprofiler"
 
-        # Launch the Python tray application in the background
-        # Redirect output to /dev/null to avoid cluttering terminal
-        nohup python3 "$script_dir/screenprofiler.py" >/dev/null 2>&1 &
+        # 1. Check if installed
+        if ! kpackagetool6 --type Plasma/Applet --list | grep -q "$APPLET_ID"; then
+            print_warning "Plasma Applet is not installed."
+            read -p "Would you like to install the Screen Profiler tray widget? (y/n): " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                kpackagetool6 --type Plasma/Applet --install "$APPLET_ROOT"
+                print_success "Applet installed."
+                echo -e "\n${COLOR_INFO}HOW TO ADD TO TASKBAR:${COLOR_RESET}"
+                echo "1. Right-click your Taskbar > Enter 'Edit Mode'."
+                echo "2. Click 'Add Widgets'."
+                echo "3. Search for 'Screen Profiler' and drag it to your tray."
+                restart_plasma
+            fi
+        else
+            # 2. Handle Updates/Uninstalls
+            INSTALLED_METADATA="$HOME/.local/share/plasma/plasmoids/$APPLET_ID/metadata.json"
+            LOCAL_METADATA="$APPLET_ROOT/metadata.json"
 
-        print_success "Screen Profiler tray application launched"
+            if [ -f "$LOCAL_METADATA" ] && [ -f "$INSTALLED_METADATA" ]; then
+                LOCAL_VERSION=$(grep '"Version":' "$LOCAL_METADATA" | cut -d'"' -f4)
+                INSTALLED_VERSION=$(grep '"Version":' "$INSTALLED_METADATA" | cut -d'"' -f4)
+
+                if [ "$INSTALLED_VERSION" != "$LOCAL_VERSION" ]; then
+                    print_warning "Version mismatch: Installed ($INSTALLED_VERSION) vs Local ($LOCAL_VERSION)"
+                    read -p "Would you like to (u)pdate or (r)emove the applet? (u/r/cancel): " choice
+                    case "$choice" in
+                        [Uu]*)
+                            kpackagetool6 --type Plasma/Applet --remove "$APPLET_ID"
+                            kpackagetool6 --type Plasma/Applet --install "$APPLET_ROOT"
+                            print_success "Applet updated to $LOCAL_VERSION"
+                            restart_plasma
+                            ;;
+                        [Rr]*)
+                            kpackagetool6 --type Plasma/Applet --remove "$APPLET_ID"
+                            print_success "Applet removed."
+                            restart_plasma
+                            exit 0
+                            ;;
+                    esac
+                else
+                    print_success "Applet (v$INSTALLED_VERSION) is already up to date."
+                    read -p "Would you like to uninstall it? (y/n): " confirm
+                    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                        kpackagetool6 --type Plasma/Applet --remove "$APPLET_ID"
+                        print_success "Applet removed."
+                        restart_plasma
+                        exit 0
+                    fi
+                fi
+            fi
+        fi
         ;;
 
     # ------------------------------------------------------------------------
@@ -186,9 +247,11 @@ case $command in
         echo ""
         print_blue "  list                List all saved profiles (alphabetically)"
         echo ""
-        print_blue "  tray                Launch the system tray application"
+        print_blue "  tray                Manage the system tray application"
         echo ""
         print_blue "  uninstall           Remove Screen Profiler from your system"
+        echo ""
+        print_blue "  update              Pull latest version and refresh applet/symlinks"
         echo ""
         print_blue "  version             Display version information"
         echo ""

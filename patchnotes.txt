@@ -1,24 +1,15 @@
-## [0.3.0] - 2026-03-06 — "New KDE tray Widget"
+## [0.4.0] - 2026-04-03 — "Hello Kapplet"
+Type: Minor
+- Replaced python tray with a plasma applet.
+- Refactored Some code, fixed some bug.
+- Fixed Kapplet crashing on first boot. (Have to rip plasmashell out of systemd hands)
+- Enchanced Uninstall and Install
+- Adjusted Screenprofiler tray to install/remove the new Kapplet
+- Added update to Screenprofilercmd
+
+## [0.3.2] - 2026-03-06 — "New KDE tray Widget"
 Type: Minor
 - Phasing out the python tray so users no longer need to install anything extra.
-
-## [0.3.6] - 2026-03-06 — "ffff"
-Type: Patch
-
-## [0.3.5] - 2026-03-06 — "234"
-Type: Patch
-- fsdf
-
-## [0.3.4] - 2026-03-06 — "ggg"
-Type: Patch
-- dds
-
-## [0.3.3] - 2026-03-06 — "Testt"
-Type: Patch
-
-## [0.3.2] - 2026-03-06 — "Test"
-Type: Patch
-- testt
 
 ## [0.3.1] - 2026-03-06 — "Local Zipping"
 Type: Patch

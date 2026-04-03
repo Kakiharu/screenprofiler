@@ -1,91 +1,68 @@
 #!/bin/bash
 #
-# install.sh - Installation script for Screen Profiler
+# install_offline.sh - Offline installer for Screen Profiler
 #
-# This script clones/updates the repository, sets permissions,
-# and creates a symlink in the user's path for easy access.
+# Installs Screen Profiler from the folder it is currently in.
 #
 
 set -e
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Installing Screen Profiler"
+echo "  Installing Screen Profiler (Offline Mode)"
 echo "═══════════════════════════════════════════════════════════"
 
 # ============================================================================
-# 1. Repository Management
+# 1. Source Directory (where this script lives)
 # ============================================================================
 
-# Target directory for the application files
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_DIR="$HOME/screenprofiler"
 
-if [ ! -d "$INSTALL_DIR" ]; then
-    echo "[INFO] Cloning repository into $INSTALL_DIR..."
-    git clone https://github.com/Kakiharu/screenprofiler.git "$INSTALL_DIR"
+echo "[INFO] Source directory: $SCRIPT_DIR"
+echo "[INFO] Install directory: $INSTALL_DIR"
+
+# ============================================================================
+# 2. Copy Files Into Place
+# ============================================================================
+
+if [ -d "$INSTALL_DIR" ]; then
+    echo "[INFO] Existing installation found. Updating files..."
 else
-    echo "[INFO] Repository already exists. Performing an update..."
-    cd "$INSTALL_DIR"
-    # Force the local branch to match the remote exactly
-    git fetch origin
-    git reset --hard origin/main
+    echo "[INFO] Creating installation directory..."
+    mkdir -p "$INSTALL_DIR"
 fi
 
-cd "$INSTALL_DIR" || exit 1
+# Copy everything except .git and installer scripts
+rsync -av --exclude='.git' --exclude='install.sh' --exclude='install_offline.sh' "$SCRIPT_DIR/" "$INSTALL_DIR/"
 
 # ============================================================================
-# 2. Permissions
+# 3. Permissions
 # ============================================================================
 
-echo "[INFO] Setting executable permissions on scripts..."
-# Ensure all core logic and helper scripts are runnable
-#chmod +x screenprofilercmd.sh save_profile.sh load_profile.sh screenprofiler.py
+echo "[INFO] Setting executable permissions..."
+chmod +x "$INSTALL_DIR"/screenprofilercmd.sh \
+         "$INSTALL_DIR"/save_profile.sh \
+         "$INSTALL_DIR"/load_profile.sh \
+         #"$INSTALL_DIR"/screenprofiler.py
 
 # ============================================================================
-# 3. Path Selection
+# 4. Symlink Logic
 # ============================================================================
 
-# Determine where to place the 'screenprofilercmd' shortcut.
-# If running as root and /usr/bin is writable, install system-wide.
 if [ -w /usr/bin ] && [ "$(id -u)" -eq 0 ]; then
     target="/usr/bin"
-    echo "[INFO] Target: System-wide directory ($target)"
+    echo "[INFO] Installing system-wide symlink..."
 else
-    # Otherwise, install to the user's local bin (standard for most distros)
     target="$HOME/.local/bin"
-    echo "[INFO] Target: User local directory ($target)"
+    echo "[INFO] Installing user-local symlink..."
     mkdir -p "$target"
 fi
-
-# ============================================================================
-# 4. Symlink Logic (The Shortcut)
-# ============================================================================
 
 link_path="$target/screenprofilercmd"
 new_file="$INSTALL_DIR/screenprofilercmd.sh"
 
-if [ -L "$link_path" ]; then
-    # Check if the existing shortcut points to something that still exists
-    current_target=$(readlink -f "$link_path")
-
-    if [ -f "$current_target" ]; then
-        # Compare modification times so we don't overwrite if unnecessary
-        current_mtime=$(stat -c %Y "$current_target")
-        new_mtime=$(stat -c %Y "$new_file")
-
-        if [ "$new_mtime" -gt "$current_mtime" ]; then
-            echo "[UPDATE] Newer version detected. Refreshing symlink..."
-            ln -sf "$new_file" "$link_path"
-        else
-            echo "[OK] Existing symlink is already up to date."
-        fi
-    else
-        echo "[FIX] Broken symlink detected. Recreating..."
-        ln -sf "$new_file" "$link_path"
-    fi
-else
-    echo "[NEW] Creating 'screenprofilercmd' symlink..."
-    ln -sf "$new_file" "$link_path"
-fi
+echo "[INFO] Creating/updating symlink at $link_path"
+ln -sf "$new_file" "$link_path"
 
 # ============================================================================
 # 5. Plasma Applet Installation / Update (Silent Mode)
@@ -133,6 +110,7 @@ if [ -d "$APPLET_SRC" ] && command -v kpackagetool6 &> /dev/null; then
         echo "[SUCCESS] Applet installed. Add it to your taskbar via 'Edit Mode'."
     fi
 fi
+
 # ============================================================================
 # 6. Finalize
 # ============================================================================
