@@ -1,0 +1,351 @@
+import QtQuick
+import QtQuick.Controls as QQC2
+import QtQuick.Layouts
+import Qt.labs.folderlistmodel
+import QtCore
+import org.kde.plasma.plasmoid
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.kirigami as Kirigami
+import org.kde.plasma.plasma5support as Plasma5Support
+import org.kde.plasma.extras as PlasmaExtras
+
+PlasmoidItem {
+    id: root
+
+    readonly property string baseDir:      StandardPaths.writableLocation(StandardPaths.HomeLocation).toString().replace("file://", "") + "/screenprofiler"
+    readonly property string scriptPath:   baseDir + "/screenprofilercmd.sh"
+    readonly property string profilesPath: baseDir + "/profiles"
+    readonly property string iconPath:     "file://" + baseDir + "/resources/mainicon.png"
+
+    // Live version — read from common.sh each time the popup opens
+    property string liveVersion: "..."
+
+    Plasma5Support.DataSource {
+        id: versionSource
+        engine: "executable"
+        onNewData: function(source, data) {
+            if (data["exit code"] === 0)
+                root.liveVersion = data["stdout"].trim();
+            disconnectSource(source);
+        }
+    }
+
+    onExpandedChanged: {
+        if (root.expanded) {
+            let cmd = "bash -c \"grep SCREENPROFILER_VERSION= '" + baseDir + "/common.sh' | cut -d= -f2 | tr -d '\\\"'\"";
+            versionSource.disconnectSource(cmd);
+            versionSource.connectSource(cmd);
+        }
+    }
+
+    readonly property int pageMain:       0
+    readonly property int pageNewProfile: 1
+    readonly property int pageSave:       2
+    readonly property int pageDelete:     3
+    property int currentPage: pageMain
+
+    // Layout — easy to tweak
+    readonly property int  maxVisibleProfiles: 5       // rows shown before scrolling kicks in
+    readonly property real rowHeight: Kirigami.Units.gridUnit * 2.8  // height of each row
+    readonly property int  panelWidth: Kirigami.Units.gridUnit * 14  // width of the popup panel
+
+    // -------------------------------------------------------------------------
+    // Shell
+    // -------------------------------------------------------------------------
+    Plasma5Support.DataSource {
+        id: shell
+        engine: "executable"
+        onNewData: function(source, data) {
+            if (data["exit code"] !== 0) {
+                console.error("ScreenProfiler error [" + source + "]:", data["stderr"]);
+            } else {
+                console.log("ScreenProfiler ok [" + source + "]:", data["stdout"]);
+            }
+            disconnectSource(source);
+        }
+        function exec(cmd) {
+            console.log("ScreenProfiler exec:", cmd);
+            connectSource(cmd);
+        }
+    }
+
+    function runCmd(args) {
+        // Pass directly — the executable engine runs the command as-is
+        // Quote each arg with single quotes, escaping any single quotes within
+        let cmd = args.map(a => "'" + a.replace(/'/g, "'\\''") + "'").join(" ");
+        shell.exec(cmd);
+    }
+
+    // -------------------------------------------------------------------------
+    // Profile folder watcher
+    // -------------------------------------------------------------------------
+    FolderListModel {
+        id: profileModel
+        folder: "file://" + root.profilesPath
+        showDirs: true
+        showFiles: false
+        nameFilters: ["*"]
+        sortField: FolderListModel.Name
+        sortCaseSensitive: false
+    }
+
+    Timer {
+        id: refreshTimer
+        interval: 800
+        onTriggered: {
+            let f = profileModel.folder;
+            profileModel.folder = "";
+            profileModel.folder = f;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Tray icon
+    // -------------------------------------------------------------------------
+    compactRepresentation: Kirigami.Icon {
+        source: root.iconPath
+        active: compactMouseArea.containsMouse
+        MouseArea {
+            id: compactMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: {
+                root.currentPage = root.pageMain;
+                root.expanded = !root.expanded;
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Full Representation — single ColumnLayout, pages toggled with visible
+    // implicitHeight follows content so the popup is always exactly the right size
+    // -------------------------------------------------------------------------
+    fullRepresentation: PlasmaExtras.Representation {
+        implicitWidth:  root.panelWidth
+        Layout.minimumWidth: root.panelWidth
+        Layout.maximumWidth: root.panelWidth
+        implicitHeight: pageMainCol.visible       ? pageMainCol.implicitHeight
+        : pageNewProfileCol.visible ? pageNewProfileCol.implicitHeight
+        : pageSaveCol.visible       ? pageSaveCol.implicitHeight
+        :                             pageDeleteCol.implicitHeight
+        Layout.minimumHeight: implicitHeight
+        Layout.maximumHeight: implicitHeight
+
+        // ── PAGE: Main ───────────────────────────────────────────────────────
+        ColumnLayout {
+            id: pageMainCol
+            visible: root.currentPage === root.pageMain
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            spacing: 0
+
+            QQC2.ScrollView {
+                Layout.fillWidth: true
+                implicitHeight: Math.min(profileListContent.implicitHeight, root.maxVisibleProfiles * root.rowHeight)
+                contentWidth: availableWidth
+                clip: true
+
+                ColumnLayout {
+                    id: profileListContent
+                    width: parent.width
+                    spacing: 0
+
+                    PlasmaComponents.Label {
+                        visible: profileModel.count === 0
+                        text: "No profiles saved yet"
+                        opacity: 0.5
+                        Layout.fillWidth: true
+                        Layout.margins: Kirigami.Units.largeSpacing
+                    }
+
+                    Repeater {
+                        model: profileModel
+                        delegate: QQC2.ItemDelegate {
+                            required property string fileName
+                            text: fileName
+                            icon.name: "video-display"
+                            width: parent.width
+                            onClicked: {
+                                root.runCmd([root.scriptPath, "load", fileName]);
+                                root.expanded = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            QQC2.ItemDelegate {
+                text: "Save Profile"
+                icon.name: "document-save"
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageSave
+            }
+            QQC2.ItemDelegate {
+                text: "Delete Profile"
+                icon.name: "edit-delete"
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageDelete
+            }
+
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            QQC2.ItemDelegate {
+                text: "Settings"
+                icon.name: "configure"
+                Layout.fillWidth: true
+                onClicked: {
+                    plasmoid.internalAction("configure").trigger();
+                    root.expanded = false;
+                }
+            }
+            QQC2.ItemDelegate {
+                text: "Donate"
+                icon.name: "favorite"
+                Layout.fillWidth: true
+                onClicked: { Qt.openUrlExternally("https://linktr.ee/kakiharu"); root.expanded = false; }
+            }
+        }
+
+        // ── PAGE: New Profile ────────────────────────────────────────────────
+        ColumnLayout {
+            id: pageNewProfileCol
+            visible: root.currentPage === root.pageNewProfile
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.ItemDelegate {
+                text: "← Back"
+                font.bold: true
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageSave
+            }
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            QQC2.TextField {
+                id: profileNameField
+                placeholderText: "Profile name…"
+                Layout.fillWidth: true
+                Layout.margins: Kirigami.Units.smallSpacing
+                onVisibleChanged: if (visible) forceActiveFocus()
+                Keys.onReturnPressed: createBtn.clicked()
+                Keys.onEscapePressed: root.currentPage = root.pageSave
+            }
+            QQC2.CheckBox {
+                id: saveKdeCheckbox
+                text: "Save KDE desktop settings"
+                checked: true
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+            }
+            QQC2.Button {
+                id: createBtn
+                text: "Create"
+                icon.name: "document-save"
+                Layout.fillWidth: true
+                Layout.margins: Kirigami.Units.smallSpacing
+                enabled: profileNameField.text.trim().length > 0
+                onClicked: {
+                    let raw  = profileNameField.text.trim();
+                    let name = raw.replace(/[^a-zA-Z0-9_\-. ]/g, "").replace(/ /g, "_");
+                    if (name.length > 0) {
+                        root.runCmd([root.scriptPath, "save", name, saveKdeCheckbox.checked ? "1" : "0"]);
+                        refreshTimer.restart();
+                    }
+                    profileNameField.text = "";
+                    root.currentPage = root.pageMain;
+                    root.expanded = false;
+                }
+            }
+        }
+
+        // ── PAGE: Save Profile ───────────────────────────────────────────────
+        ColumnLayout {
+            id: pageSaveCol
+            visible: root.currentPage === root.pageSave
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            spacing: 0
+
+            QQC2.ItemDelegate {
+                text: "← Back"
+                font.bold: true
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageMain
+            }
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            QQC2.ItemDelegate {
+                text: "New Profile…"
+                icon.name: "list-add"
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageNewProfile
+            }
+
+            Rectangle {
+                visible: profileModel.count > 0
+                Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5
+            }
+
+            Repeater {
+                model: profileModel
+                delegate: QQC2.ItemDelegate {
+                    required property string fileName
+                    text: fileName
+                    icon.name: "document-save"
+                    Layout.fillWidth: true
+                    onClicked: {
+                        root.runCmd([root.scriptPath, "save", fileName, "1"]);
+                        refreshTimer.restart();
+                        root.currentPage = root.pageMain;
+                        root.expanded = false;
+                    }
+                }
+            }
+        }
+
+        // ── PAGE: Delete Profile ─────────────────────────────────────────────
+        ColumnLayout {
+            id: pageDeleteCol
+            visible: root.currentPage === root.pageDelete
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            spacing: 0
+
+            QQC2.ItemDelegate {
+                text: "← Back"
+                font.bold: true
+                Layout.fillWidth: true
+                onClicked: root.currentPage = root.pageMain
+            }
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            PlasmaComponents.Label {
+                visible: profileModel.count === 0
+                text: "No profiles to delete"
+                opacity: 0.5
+                Layout.fillWidth: true
+                Layout.margins: Kirigami.Units.largeSpacing
+            }
+
+            Repeater {
+                model: profileModel
+                delegate: QQC2.ItemDelegate {
+                    required property string fileName
+                    Layout.fillWidth: true
+                    onClicked: {
+                        root.runCmd([root.scriptPath, "remove", fileName]);
+                        refreshTimer.restart();
+                        root.currentPage = root.pageMain;
+                        root.expanded = false;
+                    }
+                    contentItem: RowLayout {
+                        spacing: Kirigami.Units.smallSpacing
+                        Kirigami.Icon { source: "edit-delete"; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: Kirigami.Units.iconSizes.small }
+                        PlasmaComponents.Label { text: fileName; color: "#ff4444"; Layout.fillWidth: true }
+                    }
+                }
+            }
+        }
+
+    } // fullRepresentation
+}

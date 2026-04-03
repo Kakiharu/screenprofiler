@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{"Email": "dev@example.com", "Name": "Kakiharu"}],
+        "Category": "Utilities",
+        "Description": "Companion tray app for ScreenProfiler",
+        "EnabledByDefault": true,
+        "Icon": "applications-games",
+        "Id": "org.kde.screenprofiler",
+        "Name": "Screen Profiler",
+        "Version": "0.3.0",
+        "Website": "www.google.com"
+
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
+

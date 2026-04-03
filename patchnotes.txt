@@ -1,0 +1,45 @@
+## [0.3.0] - 2026-03-06 — "New KDE tray Widget"
+Type: Minor
+- Phasing out the python tray so users no longer need to install anything extra.
+
+## [0.3.6] - 2026-03-06 — "ffff"
+Type: Patch
+
+## [0.3.5] - 2026-03-06 — "234"
+Type: Patch
+- fsdf
+
+## [0.3.4] - 2026-03-06 — "ggg"
+Type: Patch
+- dds
+
+## [0.3.3] - 2026-03-06 — "Testt"
+Type: Patch
+
+## [0.3.2] - 2026-03-06 — "Test"
+Type: Patch
+- testt
+
+## [0.3.1] - 2026-03-06 — "Local Zipping"
+Type: Patch
+- Added local zipping for development. (Dev)
+
+## [0.3.0] - 2026-03-06 — "New Tray Icon"
+Type: Minor
+- New tray icon based on plasmoid widgets.
+- Phasing out the need to have python installed.
+
+## [0.2.8] - 2026-03-06 — "New Plasmoid Widget"
+Type: Patch
+- Started work on new KDE Widget to replace python app.
+
+# Screen Profiler — Patch Notes
+
+## [0.2.5] - 2026-03-06 — "Plasmoid widget release"
+Type: Minor
+- Replaced Python tray app with native KDE Plasma 6 plasmoid widget
+- Added drill-down navigation for Save and Delete profile menus
+- Added scrollable profile list capped at configurable max visible rows
+- Fixed profile loading — stripped file:// prefix from StandardPaths
+- Fixed shell command quoting to handle profile names with special characters
+- Added Settings entry to open plasmoid configuration window
