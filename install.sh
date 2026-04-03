@@ -1,58 +1,101 @@
 #!/bin/bash
+#
+# install.sh - Installation script for Screen Profiler
+#
+# This script clones/updates the repository, sets permissions,
+# and creates a symlink in the user's path for easy access.
+#
+
 set -e
 
-echo "Installing Screen Profiler..."
+echo "═══════════════════════════════════════════════════════════"
+echo "  Installing Screen Profiler"
+echo "═══════════════════════════════════════════════════════════"
 
-# Clone repo into ~/screenprofiler if not already present
-if [ ! -d "$HOME/screenprofiler" ]; then
-    git clone https://github.com/Kakiharu/screenprofiler.git "$HOME/screenprofiler"
+# ============================================================================
+# 1. Repository Management
+# ============================================================================
+
+# Target directory for the application files
+INSTALL_DIR="$HOME/screenprofiler"
+
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "[INFO] Cloning repository into $INSTALL_DIR..."
+    git clone https://github.com/Kakiharu/screenprofiler.git "$INSTALL_DIR"
 else
-    echo "Repo already exists at ~/screenprofiler"
-    cd "$HOME/screenprofiler"
-    echo "Forcing update from remote..."
+    echo "[INFO] Repository already exists. Performing a 'Boss Mode' update..."
+    cd "$INSTALL_DIR"
+    # Force the local branch to match the remote exactly
     git fetch origin
     git reset --hard origin/main
 fi
-cd "$HOME/screenprofiler" || exit 1
 
-# Make scripts executable
+cd "$INSTALL_DIR" || exit 1
+
+# ============================================================================
+# 2. Permissions
+# ============================================================================
+
+echo "[INFO] Setting executable permissions on scripts..."
+# Ensure all core logic and helper scripts are runnable
 chmod +x screenprofilercmd.sh save_profile.sh load_profile.sh screenprofiler.py
 
-# Decide install target
+# ============================================================================
+# 3. Path Selection
+# ============================================================================
+
+# Determine where to place the 'screenprofilercmd' shortcut.
+# If running as root and /usr/bin is writable, install system-wide.
 if [ -w /usr/bin ] && [ "$(id -u)" -eq 0 ]; then
     target="/usr/bin"
-    echo "Installing system-wide to $target"
+    echo "[INFO] Target: System-wide directory ($target)"
 else
+    # Otherwise, install to the user's local bin (standard for most distros)
     target="$HOME/.local/bin"
-    echo "Installing to user directory $target"
+    echo "[INFO] Target: User local directory ($target)"
     mkdir -p "$target"
 fi
 
-# Path to symlink
-link_path="$target/screenprofilercmd"
-new_file="$HOME/screenprofiler/screenprofilercmd.sh"
+# ============================================================================
+# 4. Symlink Logic (The Shortcut)
+# ============================================================================
 
-# If symlink already exists, check modification times
+link_path="$target/screenprofilercmd"
+new_file="$INSTALL_DIR/screenprofilercmd.sh"
+
 if [ -L "$link_path" ]; then
+    # Check if the existing shortcut points to something that still exists
     current_target=$(readlink -f "$link_path")
+
     if [ -f "$current_target" ]; then
+        # Compare modification times so we don't overwrite if unnecessary
         current_mtime=$(stat -c %Y "$current_target")
         new_mtime=$(stat -c %Y "$new_file")
+
         if [ "$new_mtime" -gt "$current_mtime" ]; then
-            echo "Newer version detected, replacing symlink."
+            echo "[UPDATE] Newer version detected. Refreshing symlink..."
             ln -sf "$new_file" "$link_path"
         else
-            echo "Existing symlink is up to date."
+            echo "[OK] Existing symlink is already up to date."
         fi
     else
-        echo "Existing symlink target missing, recreating."
+        echo "[FIX] Broken symlink detected. Recreating..."
         ln -sf "$new_file" "$link_path"
     fi
 else
-    echo "Creating new symlink."
+    echo "[NEW] Creating 'screenprofilercmd' symlink..."
     ln -sf "$new_file" "$link_path"
 fi
 
-echo "Screen Profiler installed!"
-echo "Run 'screenprofilercmd help' for usage instructions."
-echo "Run 'screenprofilercmd tray' to launch the system tray app."
+# ============================================================================
+# 5. Finalize
+# ============================================================================
+
+echo ""
+echo "═══════════════════════════════════════════════════════════"
+echo "  Screen Profiler installed successfully!"
+echo "═══════════════════════════════════════════════════════════"
+echo "Usage:"
+echo "  • Run 'screenprofilercmd help' for command line options."
+echo "  • Run 'screenprofilercmd tray' to launch the UI."
+echo ""

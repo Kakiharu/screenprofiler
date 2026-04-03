@@ -9,49 +9,56 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.extras as PlasmaExtras
 
+/*
+ * main.qml - Plasma Widget interface for Screen Profiler
+ * * This file handles the UI logic, profile listing, and
+ * serves as the bridge between the desktop and the shell scripts.
+ */
+
 PlasmoidItem {
     id: root
 
+
+    // ============================================================================
+    // Configuration & Paths
+    // ============================================================================
     readonly property string baseDir:      StandardPaths.writableLocation(StandardPaths.HomeLocation).toString().replace("file://", "") + "/screenprofiler"
     readonly property string scriptPath:   baseDir + "/screenprofilercmd.sh"
     readonly property string profilesPath: baseDir + "/profiles"
     readonly property string iconPath:     "file://" + baseDir + "/resources/mainicon.png"
 
-    // Live version — read from common.sh each time the popup opens
-    property string liveVersion: "..."
+    // UI Scaling and Layout Constants
+    readonly property int  maxVisibleProfiles: 5
+    readonly property real rowHeight:          Kirigami.Units.gridUnit * 2.8
+    readonly property int  panelWidth:         Kirigami.Units.gridUnit * 14
 
-    Plasma5Support.DataSource {
-        id: versionSource
-        engine: "executable"
-        onNewData: function(source, data) {
-            if (data["exit code"] === 0)
-                root.liveVersion = data["stdout"].trim();
-            disconnectSource(source);
-        }
-    }
-
-    onExpandedChanged: {
-        if (root.expanded) {
-            let cmd = "bash -c \"grep SCREENPROFILER_VERSION= '" + baseDir + "/common.sh' | cut -d= -f2 | tr -d '\\\"'\"";
-            versionSource.disconnectSource(cmd);
-            versionSource.connectSource(cmd);
-        }
-    }
-
+    // Navigation State
     readonly property int pageMain:       0
     readonly property int pageNewProfile: 1
     readonly property int pageSave:       2
     readonly property int pageDelete:     3
     property int currentPage: pageMain
 
-    // Layout — easy to tweak
-    readonly property int  maxVisibleProfiles: 5       // rows shown before scrolling kicks in
-    readonly property real rowHeight: Kirigami.Units.gridUnit * 2.8  // height of each row
-    readonly property int  panelWidth: Kirigami.Units.gridUnit * 14  // width of the popup panel
+    // Version tracking (updated when popup opens)
+    property string liveVersion: "..."
 
-    // -------------------------------------------------------------------------
-    // Shell
-    // -------------------------------------------------------------------------
+    // ============================================================================
+    // Internal Logic & Shell Execution
+    // ============================================================================
+
+    // Background process for fetching the version string
+    Plasma5Support.DataSource {
+        id: versionSource
+        engine: "executable"
+        onNewData: function(source, data) {
+            if (data["exit code"] === 0) {
+                root.liveVersion = data["stdout"].trim();
+            }
+            disconnectSource(source);
+        }
+    }
+
+    // Main shell execution engine
     Plasma5Support.DataSource {
         id: shell
         engine: "executable"
@@ -69,16 +76,26 @@ PlasmoidItem {
         }
     }
 
+    // Helper to format and run shell commands with escaped arguments
     function runCmd(args) {
-        // Pass directly — the executable engine runs the command as-is
-        // Quote each arg with single quotes, escaping any single quotes within
         let cmd = args.map(a => "'" + a.replace(/'/g, "'\\''") + "'").join(" ");
         shell.exec(cmd);
     }
 
-    // -------------------------------------------------------------------------
-    // Profile folder watcher
-    // -------------------------------------------------------------------------
+    // Refresh the version display whenever the user opens the widget
+    onExpandedChanged: {
+        if (root.expanded) {
+            let cmd = "bash -c \"grep SCREENPROFILER_VERSION= '" + baseDir + "/common.sh' | cut -d= -f2 | tr -d '\\\"'\"";
+            versionSource.disconnectSource(cmd);
+            versionSource.connectSource(cmd);
+        }
+    }
+
+    // ============================================================================
+    // Data Models
+    // ============================================================================
+
+    // Watches the profiles directory for subfolders
     FolderListModel {
         id: profileModel
         folder: "file://" + root.profilesPath
@@ -89,6 +106,7 @@ PlasmoidItem {
         sortCaseSensitive: false
     }
 
+    // Forces a UI refresh after file operations
     Timer {
         id: refreshTimer
         interval: 800
@@ -99,9 +117,9 @@ PlasmoidItem {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Tray icon
-    // -------------------------------------------------------------------------
+    // ============================================================================
+    // UI Representation (Tray Icon)
+    // ============================================================================
     compactRepresentation: Kirigami.Icon {
         source: root.iconPath
         active: compactMouseArea.containsMouse
@@ -117,22 +135,26 @@ PlasmoidItem {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Full Representation — single ColumnLayout, pages toggled with visible
-    // implicitHeight follows content so the popup is always exactly the right size
-    // -------------------------------------------------------------------------
+    // ============================================================================
+    // UI Representation (Full Popup)
+    // ============================================================================
     fullRepresentation: PlasmaExtras.Representation {
         implicitWidth:  root.panelWidth
-        Layout.minimumWidth: root.panelWidth
-        Layout.maximumWidth: root.panelWidth
+
+        // Auto-calculate height based on which sub-page is currently visible
         implicitHeight: pageMainCol.visible       ? pageMainCol.implicitHeight
         : pageNewProfileCol.visible ? pageNewProfileCol.implicitHeight
         : pageSaveCol.visible       ? pageSaveCol.implicitHeight
         :                             pageDeleteCol.implicitHeight
+
+        Layout.minimumWidth:  root.panelWidth
+        Layout.maximumWidth:  root.panelWidth
         Layout.minimumHeight: implicitHeight
         Layout.maximumHeight: implicitHeight
 
-        // ── PAGE: Main ───────────────────────────────────────────────────────
+        // ------------------------------------------------------------------------
+        // PAGE: Main (Profile List & Navigation)
+        // ------------------------------------------------------------------------
         ColumnLayout {
             id: pageMainCol
             visible: root.currentPage === root.pageMain
@@ -174,8 +196,14 @@ PlasmoidItem {
                 }
             }
 
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+            Rectangle {
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
+            }
 
+            // Bottom Actions
             QQC2.ItemDelegate {
                 text: "Save Profile"
                 icon.name: "document-save"
@@ -189,7 +217,12 @@ PlasmoidItem {
                 onClicked: root.currentPage = root.pageDelete
             }
 
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+            Rectangle {
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
+            }
 
             QQC2.ItemDelegate {
                 text: "Settings"
@@ -204,11 +237,16 @@ PlasmoidItem {
                 text: "Donate"
                 icon.name: "favorite"
                 Layout.fillWidth: true
-                onClicked: { Qt.openUrlExternally("https://linktr.ee/kakiharu"); root.expanded = false; }
+                onClicked: {
+                    Qt.openUrlExternally("https://linktr.ee/kakiharu");
+                    root.expanded = false;
+                }
             }
         }
 
-        // ── PAGE: New Profile ────────────────────────────────────────────────
+        // ------------------------------------------------------------------------
+        // PAGE: New Profile (Creation Dialog)
+        // ------------------------------------------------------------------------
         ColumnLayout {
             id: pageNewProfileCol
             visible: root.currentPage === root.pageNewProfile
@@ -221,7 +259,13 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 onClicked: root.currentPage = root.pageSave
             }
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            Rectangle {
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
+            }
 
             QQC2.TextField {
                 id: profileNameField
@@ -232,6 +276,7 @@ PlasmoidItem {
                 Keys.onReturnPressed: createBtn.clicked()
                 Keys.onEscapePressed: root.currentPage = root.pageSave
             }
+
             QQC2.CheckBox {
                 id: saveKdeCheckbox
                 text: "Save KDE desktop settings"
@@ -239,6 +284,7 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.smallSpacing
             }
+
             QQC2.Button {
                 id: createBtn
                 text: "Create"
@@ -247,8 +293,10 @@ PlasmoidItem {
                 Layout.margins: Kirigami.Units.smallSpacing
                 enabled: profileNameField.text.trim().length > 0
                 onClicked: {
+                    // Sanitize input: Replace spaces with underscores and strip special chars
                     let raw  = profileNameField.text.trim();
                     let name = raw.replace(/[^a-zA-Z0-9_\-. ]/g, "").replace(/ /g, "_");
+
                     if (name.length > 0) {
                         root.runCmd([root.scriptPath, "save", name, saveKdeCheckbox.checked ? "1" : "0"]);
                         refreshTimer.restart();
@@ -260,7 +308,9 @@ PlasmoidItem {
             }
         }
 
-        // ── PAGE: Save Profile ───────────────────────────────────────────────
+        // ------------------------------------------------------------------------
+        // PAGE: Save Profile (Overwrite existing or create new)
+        // ------------------------------------------------------------------------
         ColumnLayout {
             id: pageSaveCol
             visible: root.currentPage === root.pageSave
@@ -273,7 +323,13 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 onClicked: root.currentPage = root.pageMain
             }
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            Rectangle {
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
+            }
 
             QQC2.ItemDelegate {
                 text: "New Profile…"
@@ -284,9 +340,13 @@ PlasmoidItem {
 
             Rectangle {
                 visible: profileModel.count > 0
-                Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
             }
 
+            // ── PAGE: Save Profile ───────────────────────────────────────────────
             Repeater {
                 model: profileModel
                 delegate: QQC2.ItemDelegate {
@@ -295,7 +355,10 @@ PlasmoidItem {
                     icon.name: "document-save"
                     Layout.fillWidth: true
                     onClicked: {
-                        root.runCmd([root.scriptPath, "save", fileName, "1"]);
+                        // The script will now see this folder exists and check meta.json
+                        // for the correct 1 or 0 automatically.
+                        root.runCmd([root.scriptPath, "save", fileName, "1", "1"]);
+
                         refreshTimer.restart();
                         root.currentPage = root.pageMain;
                         root.expanded = false;
@@ -304,7 +367,9 @@ PlasmoidItem {
             }
         }
 
-        // ── PAGE: Delete Profile ─────────────────────────────────────────────
+        // ------------------------------------------------------------------------
+        // PAGE: Delete Profile (Removal list)
+        // ------------------------------------------------------------------------
         ColumnLayout {
             id: pageDeleteCol
             visible: root.currentPage === root.pageDelete
@@ -317,7 +382,13 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 onClicked: root.currentPage = root.pageMain
             }
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Kirigami.Theme.separatorColor; opacity: 0.5 }
+
+            Rectangle {
+                Layout.fillWidth: true;
+                implicitHeight: 1;
+                color: Kirigami.Theme.separatorColor;
+                opacity: 0.5
+            }
 
             PlasmaComponents.Label {
                 visible: profileModel.count === 0
@@ -340,12 +411,19 @@ PlasmoidItem {
                     }
                     contentItem: RowLayout {
                         spacing: Kirigami.Units.smallSpacing
-                        Kirigami.Icon { source: "edit-delete"; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: Kirigami.Units.iconSizes.small }
-                        PlasmaComponents.Label { text: fileName; color: "#ff4444"; Layout.fillWidth: true }
+                        Kirigami.Icon {
+                            source: "edit-delete"
+                            implicitWidth: Kirigami.Units.iconSizes.small
+                            implicitHeight: Kirigami.Units.iconSizes.small
+                        }
+                        PlasmaComponents.Label {
+                            text: fileName
+                            color: "#ff4444" // Visual warning for deletion
+                            Layout.fillWidth: true
+                        }
                     }
                 }
             }
         }
-
-    } // fullRepresentation
+    }
 }

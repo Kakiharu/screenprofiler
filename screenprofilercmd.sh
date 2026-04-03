@@ -55,13 +55,11 @@ case $command in
     save)
         if [ -z "$profile_name" ]; then
             print_error "Profile name required"
-            echo "Usage: $0 save <profile_name> [0|1]"
-            echo "  0 = Save display configuration only"
-            echo "  1 = Save display + KDE desktop settings (default)"
             exit 1
         fi
 
-        "$script_dir/save_profile.sh" "$profile_name" "$flag"
+        # Pass the name ($2), the KDE flag ($3), and the GUI flag ($4)
+        "$script_dir/save_profile.sh" "$profile_name" "$flag" "$4"
         ;;
 
     # ------------------------------------------------------------------------
