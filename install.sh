@@ -1,5 +1,9 @@
 #!/bin/bash
-#
+# Ensure we're not running from inside the install directory
+# (it gets deleted/recreated mid-install which breaks getcwd)
+if [ "$PWD" = "$HOME/screenprofiler" ] || [[ "$PWD" == "$HOME/screenprofiler/"* ]]; then
+    cd ~
+fi
 # install.sh - Installation script for Screen Profiler
 #
 # This script clones/updates the repository, sets permissions,
