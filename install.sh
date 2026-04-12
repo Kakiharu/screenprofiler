@@ -1,13 +1,4 @@
 #!/bin/bash
-# Re-exec with CRLF stripped if piped from curl
-if [ -p /dev/stdin ]; then
-    tmp=$(mktemp)
-    cat > "$tmp"
-    sed -i 's/\r//' "$tmp"
-    bash "$tmp"
-    rm -f "$tmp"
-    exit
-fi
 #
 # install.sh - Installation script for Screen Profiler
 #
@@ -17,9 +8,9 @@ fi
 
 set -e
 
-echo "═══════════════════════════════════════════════════════════"
+echo "==========================================================="
 echo "  Installing Screen Profiler"
-echo "═══════════════════════════════════════════════════════════"
+echo "==========================================================="
 
 # ============================================================================
 # 1. Repository Management
@@ -158,14 +149,15 @@ if [ -d "$APPLET_SRC" ] && command -v kpackagetool6 &> /dev/null; then
         echo "[SUCCESS] Applet installed. Add it to your taskbar via 'Edit Mode'."
     fi
 fi
+
 # ============================================================================
 # 6. Finalize
 # ============================================================================
 
-echo "═══════════════════════════════════════════════════════════"
+echo "==========================================================="
 echo "  Screen Profiler installed successfully!"
-echo "═══════════════════════════════════════════════════════════"
+echo "==========================================================="
 echo "Usage:"
-echo "  • Run 'screenprofilercmd list' to see your profiles."
-echo "  • Applet installed."
+echo "  - Run 'screenprofilercmd list' to see your profiles."
+echo "  - Applet installed."
 echo "  --> To use: Right-click Taskbar > Edit Mode > Add Widgets > Search 'Screen Profiler'"
