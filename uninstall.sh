@@ -39,9 +39,7 @@ INSTALL_DIR="$HOME/screenprofiler"
 if [ -d "$INSTALL_DIR" ]; then
     echo "[INFO] Cleaning up application files in $INSTALL_DIR..."
 
-    # Delete everything EXCEPT the profiles folder and the folder itself
-    # This finds all items in the dir, excludes 'profiles', and removes them
-    find "$INSTALL_DIR" -maxdepth 1 ! -name "profiles" ! -name "screenprofiler" -exec rm -rf {} +
+    find "$INSTALL_DIR" -maxdepth 1 -mindepth 1 ! -name "profiles" -exec rm -rf {} +
 
     echo "[OK] Application files removed. Your 'profiles' folder has been kept."
 fi
