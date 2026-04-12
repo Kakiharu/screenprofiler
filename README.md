@@ -16,7 +16,7 @@ The installer places Screen Profiler in your home directory (`~/screenprofiler`)
 Quick one‑liner install: 
 
 ```
-`curl -s https://raw.githubusercontent.com/Kakiharu/screenprofiler/main/install.sh | bash`
+`cd ~ && curl -s https://raw.githubusercontent.com/Kakiharu/screenprofiler/main/install.sh | bash`
 ```
 
 ## Manual Installation
