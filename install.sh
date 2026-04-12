@@ -1,4 +1,13 @@
 #!/bin/bash
+# Re-exec with CRLF stripped if piped from curl
+if [ -p /dev/stdin ]; then
+    tmp=$(mktemp)
+    cat > "$tmp"
+    sed -i 's/\r//' "$tmp"
+    bash "$tmp"
+    rm -f "$tmp"
+    exit
+fi
 #
 # install.sh - Installation script for Screen Profiler
 #
