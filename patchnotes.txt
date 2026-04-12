@@ -1,3 +1,8 @@
+## [0.4.1] - 2026-04-12 — "Kapplet bugfix"
+Type: Patch
+- The kaplet was losing track of its commands if plasmashell was restarted too fast.
+- Cleaned up the restart command to use the service instead.
+
 ## [0.4.0] - 2026-04-03 — "Hello Kapplet"
 Type: Minor
 - Replaced python tray with a plasma applet.

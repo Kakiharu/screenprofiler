@@ -37,8 +37,10 @@ profile=$(cat "$profile_path")
 
 # Read primary monitor from metadata
 primary_monitor=""
+save_kde="0"
 if [ -f "$meta_path" ]; then
     primary_monitor=$(jq -r '.primaryMonitor' "$meta_path")
+    save_kde=$(jq -r '.save_kde' "$meta_path")
 fi
 
 # ============================================================================
@@ -73,10 +75,6 @@ if [ "$restored_count" -eq 0 ]; then
     print_info "No KDE config files to restore"
 fi
 echo
-
-# Restart Plasma to apply KDE config changes
-restart_plasma
-
 # ============================================================================
 # Prepare Display Configuration
 # ============================================================================
@@ -171,18 +169,39 @@ if [ -n "$primary_arg" ]; then
     cmd+=("$primary_arg")
 fi
 
-# Display the command that will be executed
-print_command "Executing kscreen-doctor command:"
-printf "${COLOR_COMMAND}"
-printf 'kscreen-doctor'
-for arg in "${cmd[@]:1}"; do
-    printf ' %q' "$arg"
+# Build the kscreen-doctor command string
+kscreen_cmd=""
+for arg in "${cmd[@]}"; do
+    kscreen_cmd+=" $(printf '%q' "$arg")"
 done
-printf "${COLOR_RESET}\n"
-echo
 
-# Execute the configuration command atomically
-"${cmd[@]}"
+if [ "$save_kde" == "1" ]; then
+    print_command "Executing kscreen-doctor command:"
+    printf "${COLOR_COMMAND}"
+    printf '%s' "${cmd[0]}"
+    for arg in "${cmd[@]:1}"; do
+        printf ' %q' "$arg"
+    done
+    printf "${COLOR_RESET}\n"
+    echo
+
+    "${cmd[@]}"
+    sleep 1
+    restart_plasma
+
+else
+    # No restart happening, run kscreen-doctor directly
+    print_command "Executing kscreen-doctor command:"
+    printf "${COLOR_COMMAND}"
+    printf '%s' "${cmd[0]}"
+    for arg in "${cmd[@]:1}"; do
+        printf ' %q' "$arg"
+    done
+    printf "${COLOR_RESET}\n"
+    echo
+
+    "${cmd[@]}"
+fi
 
 echo
 print_success "Profile '$profile_name' applied successfully"

@@ -7,7 +7,7 @@
 # Version Information
 # ============================================================================
 
-SCREENPROFILER_VERSION="0.4.0"
+SCREENPROFILER_VERSION="0.4.1"
 
 # ============================================================================
 # Color Definitions
@@ -141,19 +141,7 @@ map_orientation() {
 # This is necessary after restoring KDE configuration files or the updating the tray app.
 restart_plasma() {
     print_info "Restarting Plasma shell..."
-
-    # Kill the current plasmashell process
-    pkill plasmashell
-
-    # Wait for it to fully terminate
-    sleep 1
-
-    # Start a new plasmashell instance in the background
-    # Redirect output to nohup.out to avoid cluttering the terminal
-    #nohup plasmashell --replace &>/dev/null &
-
-    plasmashell --replace >/dev/null 2>&1 & disown
-
-
+    systemctl --user reset-failed plasma-plasmashell.service 2>/dev/null || true
+    systemctl --user restart plasma-plasmashell.service
     print_success "Plasma shell restarted"
 }

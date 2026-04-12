@@ -79,7 +79,7 @@ PlasmoidItem {
     // Helper to format and run shell commands with escaped arguments
     function runCmd(args) {
         let cmd = args.map(a => "'" + a.replace(/'/g, "'\\''") + "'").join(" ");
-        shell.exec(cmd);
+        shell.exec("setsid bash -c " + "'" + cmd.replace(/'/g, "'\\''") + "' &>/dev/null &");
     }
 
     // Refresh the version display whenever the user opens the widget
