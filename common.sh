@@ -127,8 +127,8 @@ map_orientation() {
     case $orientation_code in
         1) echo "normal" ;;
         2) echo "left" ;;
-        3) echo "inverted" ;;
-        4) echo "right" ;;
+        4) echo "inverted" ;;
+        8) echo "right" ;;
         *) echo "normal" ;;  # Default to normal if unknown
     esac
 }
