@@ -40,7 +40,12 @@ primary_monitor=""
 save_kde="0"
 if [ -f "$meta_path" ]; then
     primary_monitor=$(jq -r '.primaryMonitor' "$meta_path")
-    save_kde=$(jq -r '.save_kde' "$meta_path")
+    save_kde=$(jq -r '.save_kde // 0' "$meta_path")
+    # Anything other than 0 (including values corrupted by older versions
+    # of save_profile.sh, e.g. 10/11) counts as "KDE configs saved"
+    if [ "$save_kde" != "0" ]; then
+        save_kde="1"
+    fi
 fi
 
 # ============================================================================
@@ -52,6 +57,7 @@ print_info "Restoring KDE configuration files..."
 # Define KDE config files to restore
 declare -A kde_files=(
     ["plasma-org.kde.plasma.desktop-appletsrc"]="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+    ["plasmashellrc"]="$HOME/.config/plasmashellrc"
     ["kwinrc"]="$HOME/.config/kwinrc"
     ["kdeglobals"]="$HOME/.config/kdeglobals"
     ["plasmarc"]="$HOME/.config/plasmarc"

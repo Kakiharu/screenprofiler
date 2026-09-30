@@ -25,7 +25,12 @@ meta_file="$profile_dir/meta.json"
 
 # 1. Check if this is a GUI-based overwrite of an existing profile
 if [ "$gui_mode" == "1" ] && [ -f "$meta_file" ]; then
-    save_kde_flag=$(grep '"save_kde":' "$meta_file" | sed 's/[^0-1]//g')
+    save_kde_flag=$(jq -r '.save_kde // 1' "$meta_file" 2>/dev/null)
+    # Normalise: anything other than 0 (including values corrupted by older
+    # versions of this script, e.g. 10/11) is treated as 1
+    if [ "$save_kde_flag" != "0" ]; then
+        save_kde_flag=1
+    fi
     print_info "GUI Overwrite detected. Respecting original 'save_kde'=$save_kde_flag"
 
 # 2. Otherwise, use the explicit flag provided ($2)
@@ -53,8 +58,12 @@ print_info "Capturing current display configuration..."
 # Capture current display configuration from KScreen
 current_config=$(kscreen-console json | sed -n '/^{/,$p')
 
-# Identify the primary monitor
-primary_monitor=$(xrandr --query | grep "primary" | awk '{print $1}')
+# Identify the primary monitor (KScreen priority 1 = primary).
+# Falls back to xrandr if KScreen doesn't report one.
+primary_monitor=$(echo "$current_config" | jq -r '[.outputs[] | select(.enabled == true and .priority == 1)][0].name // ""')
+if [ -z "$primary_monitor" ] && command -v xrandr &> /dev/null; then
+    primary_monitor=$(xrandr --query | grep " primary" | awk '{print $1}' | head -n1)
+fi
 
 # Save display configuration to JSON file
 echo "$current_config" > "$profile_dir/display.json"
@@ -71,6 +80,7 @@ if [ "$save_kde_flag" == "1" ]; then
     # Define KDE config files to save
     declare -A kde_files=(
         ["plasma-org.kde.plasma.desktop-appletsrc"]="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+        ["plasmashellrc"]="$HOME/.config/plasmashellrc"
         ["kwinrc"]="$HOME/.config/kwinrc"
         ["kdeglobals"]="$HOME/.config/kdeglobals"
         ["plasmarc"]="$HOME/.config/plasmarc"
@@ -104,8 +114,8 @@ echo
 print_info "Saving profile metadata..."
 
 # Create metadata file with save flag and primary monitor info
-metadata_content="{ \"save_kde\": $save_kde_flag, \"primaryMonitor\": \"$primary_monitor\" }"
-echo "$metadata_content" > "$meta_file"
+jq -n --argjson kde "$save_kde_flag" --arg pm "$primary_monitor" \
+    '{save_kde: $kde, primaryMonitor: $pm}' > "$meta_file"
 print_success "Saved metadata"
 
 echo ""

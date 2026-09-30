@@ -199,7 +199,7 @@ PlasmoidItem {
             Rectangle {
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
@@ -220,7 +220,7 @@ PlasmoidItem {
             Rectangle {
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
@@ -263,7 +263,7 @@ PlasmoidItem {
             Rectangle {
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
@@ -327,7 +327,7 @@ PlasmoidItem {
             Rectangle {
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
@@ -342,7 +342,7 @@ PlasmoidItem {
                 visible: profileModel.count > 0
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
@@ -386,7 +386,7 @@ PlasmoidItem {
             Rectangle {
                 Layout.fillWidth: true;
                 implicitHeight: 1;
-                color: Kirigami.Theme.separatorColor;
+                color: Kirigami.Theme.textColor;
                 opacity: 0.5
             }
 
