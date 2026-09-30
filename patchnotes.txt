@@ -1,3 +1,6 @@
+## [0.4.2] - 2026-09-29 — "Fixed rotation saving and profile overwriting."
+Type: Patch
+
 ## [0.4.1] - 2026-04-12 — "Kapplet bugfix"
 Type: Patch
 - The kaplet was losing track of its commands if plasmashell was restarted too fast.
