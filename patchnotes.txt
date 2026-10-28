@@ -1,3 +1,11 @@
+## [0.4.3] - 2026-10-27 — "Missing monitor fix"
+Type: Patch
+- Fixed profiles failing to load when a saved monitor is not plugged in.
+- Outputs missing from the system are now skipped instead of aborting the whole profile.
+- Monitors not in the profile, or disabled in it, stay off.
+- Load now checks kscreen-doctor's result and only reports success (and restarts Plasma) if it worked.
+- Removed unused command-string code in load_profile.sh.
+
 ## [0.4.2] - 2026-09-29 — "Fixed rotation saving and profile overwriting."
 Type: Patch
 

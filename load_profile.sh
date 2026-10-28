@@ -85,8 +85,21 @@ echo
 # Prepare Display Configuration
 # ============================================================================
 
-# Get currently connected outputs
-current_outputs=$(kscreen-console json | sed -n '/^{/,$p' | jq -r '.outputs[].name')
+# Get the current KScreen state once
+current_json=$(kscreen-console json | sed -n '/^{/,$p')
+
+# Every output KScreen currently knows about
+current_outputs=$(echo "$current_json" | jq -r '.outputs[].name')
+
+# Outputs KScreen knows about AND that are physically connected
+declare -A known_map
+declare -A connected_map
+for o in $current_outputs; do
+    known_map["$o"]=1
+done
+for o in $(echo "$current_json" | jq -r '.outputs[] | select(.connected == true) | .name'); do
+    connected_map["$o"]=1
+done
 
 # Build hash map of outputs defined in the profile
 declare -A profile_outputs
@@ -110,6 +123,23 @@ for output in $outputs; do
     # Extract output properties
     name=$(echo "$output" | jq -r '.name')
     enabled=$(echo "$output" | jq -r '.enabled')
+
+    # kscreen-doctor rejects the WHOLE command if it names an unknown output,
+    # so anything KScreen doesn't know about must be left out.
+    if [ -z "${known_map[$name]}" ]; then
+        if [ "$enabled" == "true" ]; then
+            print_warning "Output $name is enabled in the profile but not present, skipping"
+        else
+            print_info "Output $name (disabled in profile) is not present, skipping"
+        fi
+        continue
+    fi
+
+    # Present but not physically connected: can't be enabled
+    if [ "$enabled" == "true" ] && [ -z "${connected_map[$name]}" ]; then
+        print_warning "Output $name is not connected, skipping"
+        continue
+    fi
 
     if [ "$enabled" == "true" ]; then
         ((enabled_count++))
@@ -175,38 +205,24 @@ if [ -n "$primary_arg" ]; then
     cmd+=("$primary_arg")
 fi
 
-# Build the kscreen-doctor command string
-kscreen_cmd=""
-for arg in "${cmd[@]}"; do
-    kscreen_cmd+=" $(printf '%q' "$arg")"
+print_command "Executing kscreen-doctor command:"
+printf "${COLOR_COMMAND}"
+printf '%s' "${cmd[0]}"
+for arg in "${cmd[@]:1}"; do
+    printf ' %q' "$arg"
 done
+printf "${COLOR_RESET}\n"
+echo
+
+if ! "${cmd[@]}"; then
+    echo
+    print_error "kscreen-doctor failed, profile not applied"
+    exit 1
+fi
 
 if [ "$save_kde" == "1" ]; then
-    print_command "Executing kscreen-doctor command:"
-    printf "${COLOR_COMMAND}"
-    printf '%s' "${cmd[0]}"
-    for arg in "${cmd[@]:1}"; do
-        printf ' %q' "$arg"
-    done
-    printf "${COLOR_RESET}\n"
-    echo
-
-    "${cmd[@]}"
     sleep 1
     restart_plasma
-
-else
-    # No restart happening, run kscreen-doctor directly
-    print_command "Executing kscreen-doctor command:"
-    printf "${COLOR_COMMAND}"
-    printf '%s' "${cmd[0]}"
-    for arg in "${cmd[@]:1}"; do
-        printf ' %q' "$arg"
-    done
-    printf "${COLOR_RESET}\n"
-    echo
-
-    "${cmd[@]}"
 fi
 
 echo
